@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Audit Command | EventPass Premium</title>
+    <title>Audit Command | EventPass Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <style>
@@ -78,24 +78,20 @@
                 </div>
                 <div>
                     <h1 class="text-white font-bold text-lg leading-tight">Audit Command</h1>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Global Security Log</p>
+                    <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Security Intelligence</p>
                 </div>
             </div>
 
-            <!-- Double Clock System -->
+            <!-- Single Clock System -->
             <div class="flex items-center gap-3">
                 <div class="flex flex-col items-end px-4 border-r border-white/10">
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Local (IST)</span>
-                    <span id="istClock" class="text-white mono-time font-medium text-sm">--:--:--</span>
-                </div>
-                <div class="flex flex-col items-end pr-4">
                     <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter flex items-center gap-1">
-                        <span class="w-1 h-1 bg-indigo-400 rounded-full live-indicator"></span> Global (ITC/UTC)
+                        <span class="w-1 h-1 bg-indigo-400 rounded-full live-indicator"></span> Local System Time
                     </span>
-                    <span id="utcClock" class="text-indigo-100 mono-time font-medium text-sm">--:--:--</span>
+                    <span id="istClock" class="text-white mono-time font-bold text-lg">--:--:-- IST</span>
                 </div>
                 
-                <div class="flex items-center gap-2 ml-4">
+                <div class="flex items-center gap-2 ml-2">
                     <button id="refreshBtn" onclick="handleRefresh()" class="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all group">
                         <svg id="refreshIcon" class="w-4 h-4 transition-transform duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -118,7 +114,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </span>
                 <select id="actionFilter" onchange="loadLogs()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">All Global Activity</option>
+                    <option value="">All Activity Logs</option>
                     <optgroup label="Events Management">
                         <option value="event_created">Event Created</option>
                         <option value="event_updated">Event Updated</option>
@@ -172,7 +168,7 @@
         </div>
     </main>
 
-    <!-- Overlay Info Box (Custom Alert replacement) -->
+    <!-- Overlay Info Box -->
     <div id="toast" class="fixed bottom-8 right-8 translate-y-20 opacity-0 transition-all duration-300 z-[100]">
         <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
             <span id="toastIcon"></span>
@@ -181,47 +177,60 @@
     </div>
 
     <script>
-        // Elite Dual Clock System
-        function updateClocks() {
+        // Update Header Clock
+        function updateClock() {
             const now = new Date();
-            
-            // IST (Local)
-            const istOptions = { 
+            const timeString = now.toLocaleTimeString('en-IN', { 
                 timeZone: 'Asia/Kolkata', 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
                 hour12: true 
-            };
-            document.getElementById('istClock').textContent = now.toLocaleTimeString('en-IN', istOptions);
-
-            // UTC (ITC) - Calculated as IST minus 5:30
-            // Since standard Date.toISOString() or UTC methods provide this, we use the UTC timezone
-            const utcOptions = { 
-                timeZone: 'UTC', 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', 
-                hour12: false 
-            };
-            document.getElementById('utcClock').textContent = now.toLocaleTimeString('en-GB', utcOptions);
+            });
+            document.getElementById('istClock').textContent = timeString.toUpperCase() + " IST";
         }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-        setInterval(updateClocks, 1000);
-        updateClocks();
-
-        // Helper: Format Timestamp for Table
+        /**
+         * Robust Timestamp Formatting for IST
+         * We avoid manual millisecond math to prevent double-offsets.
+         * The browser's Intl API handles the 5:30 conversion natively.
+         */
         function formatLogTime(ts) {
             let date;
+            
+            // Handle MongoDB format or standard strings/numbers
             if (ts && ts.$date) {
                 date = new Date(ts.$date.$numberLong ? parseInt(ts.$date.$numberLong) : ts.$date);
+            } else if (typeof ts === 'string') {
+                // Ensure ISO format compatibility
+                date = new Date(ts.includes(' ') ? ts.replace(' ', 'T') : ts);
             } else {
                 date = new Date(ts || Date.now());
             }
 
-            // Convert to IST
-            const IST_OFFSET = (5 * 60 + 30) * 60 * 1000;
-            const istDate = new Date(date.getTime() + IST_OFFSET);
+            // If date is invalid, fallback to now
+            if (isNaN(date.getTime())) date = new Date();
+
+            const dateOptions = { 
+                timeZone: 'Asia/Kolkata', 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            };
+            
+            const timeOptions = { 
+                timeZone: 'Asia/Kolkata', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: true 
+            };
 
             return {
-                day: istDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
-                time: istDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+                day: date.toLocaleDateString('en-IN', dateOptions),
+                time: date.toLocaleTimeString('en-IN', timeOptions)
             };
         }
 
@@ -235,7 +244,7 @@
             return configs[type] || { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-100', dot: 'bg-slate-400' };
         }
 
-        function showToast(msg, type = 'success') {
+        function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').textContent = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
@@ -245,16 +254,13 @@
         async function handleRefresh() {
             const btn = document.getElementById('refreshBtn');
             const icon = document.getElementById('refreshIcon');
-            
             icon.classList.add('refresh-spin');
             btn.disabled = true;
-            
             await loadLogs();
-            
             setTimeout(() => {
                 icon.classList.remove('refresh-spin');
                 btn.disabled = false;
-                showToast('Logs synchronized successfully');
+                showToast('Audit feed synchronized');
             }, 600);
         }
 
@@ -277,7 +283,7 @@
                     container.innerHTML = data.logs.map(log => {
                         const timeInfo = formatLogTime(log.timestamp);
                         const cfg = getActionConfig(log.action_type);
-                        const performer = log.performed_by_name || 'System Auto';
+                        const performer = log.performed_by_name || 'System';
                         const initial = performer.split(' ').map(n => n[0]).join('').substring(0, 2);
 
                         return `
@@ -285,7 +291,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-slate-900 tracking-tight">${timeInfo.day}</span>
-                                        <span class="text-xs font-medium text-slate-400 mono-time">${timeInfo.time}</span>
+                                        <span class="text-xs font-bold text-indigo-600 mono-time">${timeInfo.time}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -296,7 +302,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] text-white font-black shadow-sm">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] text-white font-black">
                                             ${initial}
                                         </div>
                                         <div class="flex flex-col">
@@ -307,37 +313,20 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <p class="text-sm text-slate-500 line-clamp-1 group-hover:line-clamp-none transition-all duration-300 max-w-md font-medium italic">
-                                        "${log.details || 'No extended metadata available'}"
+                                        "${log.details || '—'}"
                                     </p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded shadow-sm">VERIFIED</span>
+                                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded border border-emerald-200">VERIFIED</span>
                                 </td>
                             </tr>
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="py-32 text-center">
-                                <div class="opacity-20 text-6xl mb-4">🛡️</div>
-                                <h3 class="text-slate-400 font-bold text-lg uppercase tracking-widest">Clear Perimeter</h3>
-                                <p class="text-slate-400 text-sm">No security logs recorded for these parameters.</p>
-                            </td>
-                        </tr>
-                    `;
+                    container.innerHTML = `<tr><td colspan="5" class="py-32 text-center text-slate-400 font-bold uppercase tracking-widest">No Logs Found</td></tr>`;
                 }
             } catch (err) {
-                container.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="py-20 text-center">
-                            <div class="bg-rose-50 text-rose-600 p-6 rounded-2xl inline-block border border-rose-100 shadow-xl">
-                                <p class="font-bold mb-3">Satellite Uplink Failed</p>
-                                <button onclick="loadLogs()" class="px-6 py-2 bg-rose-600 text-white rounded-lg text-sm font-bold hover:bg-rose-700 transition-all">Reconnect to Command</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                container.innerHTML = `<tr><td colspan="5" class="py-20 text-center"><button onclick="loadLogs()" class="px-6 py-2 bg-rose-600 text-white rounded-lg font-bold">Retry Connection</button></td></tr>`;
             }
         }
 
