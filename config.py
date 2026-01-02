@@ -30,6 +30,9 @@ class Config:
     
     @staticmethod
     def allowed_file(filename):
-        return '.' in filename and \
+        return (
+            '.' in filename and
+            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+        )
 
-               filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+
