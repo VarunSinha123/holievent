@@ -27,8 +27,11 @@ class Config:
 
     @staticmethod
     def allowed_file(filename):
-        return '.' in filename and \
-               filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+        return (
+            '.' in filename and
+            filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
+        )
+
 
 def create_app():
     app = Flask(__name__)
@@ -220,3 +223,4 @@ if __name__ == '__main__':
         port=5000
 
     )
+
