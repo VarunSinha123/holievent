@@ -8,7 +8,7 @@ import os
 class Config:
     # Flask Core
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
+    FLASK_ENV = os.getenv('FLASK_ENV', 'production')
     
     # MongoDB Connection
     MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
@@ -17,7 +17,7 @@ class Config:
     # AWS S3
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_REGION = os.getenv('AWS_REGION', 'us-east-1')
+    AWS_REGION = os.getenv('AWS_REGION', 'eu-north-1')
     S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
     
     # Limits & Security
@@ -218,4 +218,5 @@ if __name__ == '__main__':
         debug=(app.config['FLASK_ENV'] == 'development'),
         host='0.0.0.0',
         port=5000
+
     )
