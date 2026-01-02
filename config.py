@@ -6,7 +6,7 @@ load_dotenv()
 class Config:
     # Flask
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    FLASK_ENV = os.getenv('FLASK_ENV', 'development')
+    FLASK_ENV = os.getenv('FLASK_ENV', 'prduction')
     
     # MongoDB
     MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/')
@@ -23,18 +23,13 @@ class Config:
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
     
     # Event defaults
-    DEFAULT_EVENT_NAME = "SAVORA"
-    DEFAULT_EVENT_DATE = "DECEMBER 31ST"
+    DEFAULT_EVENT_NAME = "HOLI"
+    DEFAULT_EVENT_DATE = "February 28th"
     DEFAULT_VENUE = "Carnival , Ranchi"
     
-    # Powered by
-    POWERED_BY_NAME = "rave.live"
-    POWERED_BY_LOGO = "rave_live_logo.png"  # Store in S3
-    
-    # Currency
-    CURRENCY = os.getenv('CURRENCY', 'INR')
     
     @staticmethod
     def allowed_file(filename):
         return '.' in filename and \
+
                filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
