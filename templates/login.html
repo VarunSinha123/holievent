@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Elite Event System</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f0f4f8;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: fixed linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 480px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .logo h1 {
+            color: var(--text-main);
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+
+        .logo p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Role Selector */
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .role-btn {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .role-btn.active {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+
+        .role-btn .icon { font-size: 1.5rem; }
+        .role-btn .label { font-weight: 700; font-size: 0.8rem; color: var(--text-main); }
+
+        /* Form */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            display: block;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-login:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        /* Custom Notification Container */
+        #notificationContainer {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <div class="login-container">
+        <div class="logo">
+            <span class="logo-icon">🎫</span>
+            <h1>Elite Access</h1>
+            <p>Enter your credentials to continue</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="role-selector">
+                <div class="role-btn active" onclick="selectRole('user')" data-role="user">
+                    <span class="icon">👤</span>
+                    <span class="label">Attendee</span>
+                </div>
+                <div class="role-btn" onclick="selectRole('bouncer')" data-role="bouncer">
+                    <span class="icon">🛂</span>
+                    <span class="label">Bouncer</span>
+                </div>
+                <div class="role-btn" onclick="selectRole('admin')" data-role="admin">
+                    <span class="icon">👑</span>
+                    <span class="label">Admin</span>
+                </div>
+                <div class="role-btn" onclick="selectRole('super_admin')" data-role="super_admin">
+                    <span class="icon">⚡</span>
+                    <span class="label">Super Admin</span>
+                </div>
+            </div>
+
+            <input type="hidden" id="roleInput" value="user">
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" class="form-input" required placeholder="name@company.com" autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" class="form-input" required placeholder="••••••••" autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">Authorize Access</button>
+        </form>
+
+        <div class="links">
+            <p>New to the system? <a href="/auth/register">Create Account</a></p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * NOTIFICATIONS
+         */
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colors = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1' };
+            note.style.borderLeftColor = colors[type] || colors.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span style="font-size: 0.9rem; font-weight: 600;">${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 5000);
+        }
+
+        /**
+         * LOGIN LOGIC
+         */
+        let currentRole = 'user';
+
+        function selectRole(role) {
+            currentRole = role;
+            document.getElementById('roleInput').value = role;
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-role="${role}"]`).classList.add('active');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/auth/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role: currentRole })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification(`Welcome back! Redirecting to ${data.role} console...`, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 800);
+                } else {
+                    showNotification(data.message || 'Invalid authorization credentials', 'danger');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Authorize Access';
+                }
+            } catch (error) {
+                showNotification('Network error. Check your connection.', 'danger');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Authorize Access';
+            }
+        });
+
+        // Initial setup based on URL
+        const params = new URLSearchParams(window.location.search);
+        const roleParam = params.get('role');
+        if (roleParam && ['user', 'admin', 'bouncer', 'super_admin'].includes(roleParam)) {
+            selectRole(roleParam);
+        }
+        
+        // Success logout message
+        if (params.get('logout') === 'success') {
+            showNotification('You have been securely signed out.', 'success');
+        }
+    </script>
+</body>
+</html>

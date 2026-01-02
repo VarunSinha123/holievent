@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk QR Provisioning | Elite System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #4338ca 0%, #7e22ce 100%);
+        }
+
+        .custom-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+            border: 1px solid #f1f5f9;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .custom-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #1e293b;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin-anim { animation: spin 0.8s linear infinite; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Premium Header -->
+    <header class="header-gradient text-white pt-10 pb-24 px-6 shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+            <div class="space-y-3">
+                <nav class="flex items-center gap-3 text-indigo-100/70 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <a href="/super-admin/dashboard" class="hover:text-white transition">Admin Dashboard</a>
+                    <i class="fas fa-circle text-[4px]"></i>
+                    <span class="text-white">Secure Asset Provisioning</span>
+                </nav>
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight">Bulk QR Vault</h1>
+                <p class="text-indigo-100/80 font-medium max-w-lg leading-relaxed">
+                    Generate high-fidelity standalone QR codes. Monitor security serials and export production-ready ticket sheets for distribution.
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4">
+                <a href="/super-admin/dashboard" class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-3.5 rounded-2xl font-bold transition-all border border-white/20 flex items-center gap-3 shadow-lg active:scale-95">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <button onclick="handleReload()" id="reloadBtn" class="bg-indigo-500 hover:bg-indigo-400 text-white px-6 py-3.5 rounded-2xl font-bold transition-all border border-white/20 flex items-center gap-3 shadow-lg active:scale-95">
+                    <i class="fas fa-sync-alt" id="reloadIcon"></i> Sync Inventory
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Area -->
+    <main class="max-w-7xl mx-auto px-6 -mt-12 pb-20">
+        
+        <!-- Statistics Dashboard -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="custom-card p-7 flex items-center gap-6 border-l-4 border-l-indigo-600">
+                <div class="h-16 w-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-3xl">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div>
+                    <div id="stat-total" class="text-4xl font-black text-slate-800 leading-none tracking-tight">--</div>
+                    <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Total Issued</div>
+                </div>
+            </div>
+            <div class="custom-card p-7 flex items-center gap-6 border-l-4 border-l-emerald-500">
+                <div class="h-16 w-16 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div>
+                    <div id="stat-unused" class="text-4xl font-black text-slate-800 leading-none tracking-tight">--</div>
+                    <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Available Serials</div>
+                </div>
+            </div>
+            <div class="custom-card p-7 flex items-center gap-6 border-l-4 border-l-rose-500">
+                <div class="h-16 w-16 rounded-3xl bg-rose-50 text-rose-600 flex items-center justify-center text-3xl">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <div id="stat-used" class="text-4xl font-black text-slate-800 leading-none tracking-tight">--</div>
+                    <div class="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">Redeemed Codes</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Sidebar Controls -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Batch Generation -->
+                <div class="custom-card p-8">
+                    <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                        <i class="fas fa-bolt text-amber-500"></i> New Batch
+                    </h2>
+                    <form id="generateForm" class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Select Target Event</label>
+                            <select id="eventId" class="form-select" required>
+                                <option value="">Loading events...</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Ticket Tier</label>
+                            <select id="ticketType" class="form-select" required>
+                                <option value="">Select event first</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Provisioning Quantity</label>
+                            <input type="number" id="quantity" class="form-input" min="1" max="1000" value="100" required>
+                        </div>
+                        <button type="submit" id="generateBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                            GENERATE SECURE ASSETS
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Export & Assets -->
+                <div class="custom-card p-8 bg-slate-900 text-white border-none overflow-hidden relative group">
+                    <div class="absolute -top-4 -right-4 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <i class="fas fa-qrcode text-9xl"></i>
+                    </div>
+                    <h2 class="text-2xl font-black mb-6 flex items-center gap-3 relative z-10">
+                        <i class="fas fa-file-export text-indigo-400"></i> Export Pack
+                    </h2>
+                    <div class="space-y-6 relative z-10">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Asset Category Filter</label>
+                            <select id="downloadTierFilter" class="form-select bg-slate-800 border-slate-700 text-white focus:ring-indigo-500">
+                                <option value="">-- All Categories --</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4">
+                            <button onclick="exportAssets('pdf')" class="bg-indigo-600 hover:bg-indigo-700 p-5 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all">
+                                <i class="fas fa-file-pdf text-xl"></i> DOWNLOAD PDF PACK
+                            </button>
+                            <button onclick="exportAssets('png')" class="bg-slate-800 hover:bg-slate-750 p-5 rounded-2xl font-black text-sm flex items-center justify-center gap-3 transition-all border border-slate-700">
+                                <i class="fas fa-file-image text-xl"></i> DOWNLOAD IMAGE SHEET
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Content Area -->
+            <div class="lg:col-span-8">
+                <div class="custom-card overflow-hidden">
+                    <div class="p-8 border-b bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                                <i class="fas fa-th-large text-indigo-500"></i> Asset Registry
+                            </h2>
+                            <p class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider" id="registrySubText">Standby - Data not yet synchronized</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span id="authWarning" class="hidden text-rose-500 text-[10px] font-black uppercase tracking-widest bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-100">Auth Required</span>
+                            <button onclick="loadRegistry(1000)" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors">
+                                View full inventory
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-8 bg-slate-50/50 min-h-[400px]">
+                        <div id="qrCodesContainer" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <!-- Placeholder for initial load -->
+                            <div class="col-span-full py-32 text-center">
+                                <div class="bg-indigo-100/50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
+                                    <i class="fas fa-sync-alt text-3xl"></i>
+                                </div>
+                                <h3 class="text-slate-800 font-black text-lg">System Standby</h3>
+                                <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Click "Sync Inventory" to load registry data</p>
+                                <button onclick="handleReload()" class="mt-8 bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                                    Initialize Sync
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- "Show More" Bottom Button -->
+                        <div id="loadMoreContainer" class="mt-12 text-center hidden">
+                            <button onclick="loadRegistry(1000)" class="bg-white border-2 border-slate-200 text-slate-600 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm">
+                                Load Full Registry (Unlimited)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl opacity-0 translate-y-4 transition-all pointer-events-none z-50 border border-white/10">
+        Operation Successful
+    </div>
+
+    <script>
+        const API_BASE = '/bulk-qr'; 
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', '-translate-y-2');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', '-translate-y-2');
+            }, 3000);
+        }
+
+        async function handleReload() {
+            const btn = document.getElementById('reloadBtn');
+            const icon = document.getElementById('reloadIcon');
+            const container = document.getElementById('qrCodesContainer');
+            
+            // UI Feedback for Loading
+            icon.classList.add('spin-anim');
+            btn.disabled = true;
+            container.innerHTML = `
+                <div class="col-span-full py-32 text-center">
+                    <i class="fas fa-circle-notch fa-spin text-5xl text-indigo-600 mb-6"></i>
+                    <p class="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Synchronizing Vault...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch everything manually
+                await Promise.all([updateStats(), loadRegistry(100), loadEvents()]);
+                showToast("System State Synchronized");
+            } catch (e) {
+                showToast("Connection Refused");
+                container.innerHTML = '<div class="col-span-full py-24 text-center text-rose-500 font-bold text-xs uppercase tracking-[0.2em]">Registry Synchronization Failed</div>';
+            } finally {
+                icon.classList.remove('spin-anim');
+                btn.disabled = false;
+            }
+        }
+
+        async function loadEvents() {
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                const select = document.getElementById('eventId');
+                if (data.success) {
+                    select.innerHTML = '<option value="">-- Select Event --</option>';
+                    data.events.forEach(ev => {
+                        const opt = document.createElement('option');
+                        opt.value = ev._id.$oid || ev._id;
+                        opt.textContent = ev.name;
+                        opt.dataset.ticketTypes = JSON.stringify(ev.ticket_types || []);
+                        opt.dataset.name = ev.name;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) { console.error("Event fetch failed"); }
+        }
+
+        document.getElementById('eventId').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const typeSelect = document.getElementById('ticketType');
+            const filterSelect = document.getElementById('downloadTierFilter');
+            
+            if(!selected.value) {
+                typeSelect.innerHTML = '<option value="">Select event first</option>';
+                filterSelect.innerHTML = '<option value="">-- All Categories --</option>';
+                return;
+            }
+
+            const types = JSON.parse(selected.dataset.ticketTypes || '[]');
+            typeSelect.innerHTML = '<option value="">-- Select Category --</option>';
+            filterSelect.innerHTML = '<option value="">-- All Categories --</option>';
+
+            types.forEach(t => {
+                const opt = `<option value="${t.name}">${t.name}</option>`;
+                typeSelect.innerHTML += opt;
+                filterSelect.innerHTML += opt;
+            });
+        });
+
+        async function updateStats() {
+            try {
+                const res = await fetch(`${API_BASE}/api/stats`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('stat-total').textContent = data.total || 0;
+                    document.getElementById('stat-unused').textContent = data.unused || 0;
+                    document.getElementById('stat-used').textContent = data.used || 0;
+                }
+            } catch (e) { console.error("Stats error"); }
+        }
+
+        async function loadRegistry(limit = 100) {
+            const container = document.getElementById('qrCodesContainer');
+            const subText = document.getElementById('registrySubText');
+            const authWarning = document.getElementById('authWarning');
+            const loadMore = document.getElementById('loadMoreContainer');
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/list-unused?limit=${limit}`);
+                if (res.status === 401 || res.status === 403) {
+                    authWarning.classList.remove('hidden');
+                    container.innerHTML = '<div class="col-span-full py-24 text-center text-rose-500 font-black text-xs uppercase tracking-widest">Unauthorized System Access</div>';
+                    return;
+                }
+                
+                const data = await res.json();
+                authWarning.classList.add('hidden');
+                
+                if (data.success && data.qr_codes && data.qr_codes.length > 0) {
+                    subText.innerText = limit >= 1000 ? "Displaying Complete Vault Inventory" : `Displaying latest ${data.qr_codes.length} serials`;
+                    loadMore.classList.toggle('hidden', limit >= 1000 || data.qr_codes.length < limit);
+
+                    container.innerHTML = data.qr_codes.map(qr => `
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 text-center space-y-4 shadow-sm hover:shadow-xl transition-all duration-300">
+                            <div class="text-[9px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-50/50 py-1.5 px-3 rounded-full inline-block">SEQ #${String(qr.sequence_number || 0).padStart(3, '0')}</div>
+                            <img src="${qr.qr_url}" class="w-full aspect-square mx-auto rounded-2xl bg-slate-50 p-3" alt="QR Asset">
+                            <div class="space-y-1">
+                                <div class="font-mono text-[10px] font-black text-slate-800 truncate">${qr.serial_number}</div>
+                                <div class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${qr.ticket_type || 'GENERAL'}</div>
+                            </div>
+                            <div class="status-pill w-full justify-center ${qr.used ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}">
+                                <i class="fas ${qr.used ? 'fa-times-circle' : 'fa-check-circle'} mr-2"></i>
+                                ${qr.used ? 'Redeemed' : 'Active'}
+                            </div>
+                        </div>`).join('');
+                } else {
+                    container.innerHTML = '<div class="col-span-full py-24 text-center text-slate-400 font-bold text-xs uppercase tracking-widest">No assets found in registry</div>';
+                    loadMore.classList.add('hidden');
+                }
+            } catch (e) { 
+                container.innerHTML = '<div class="col-span-full py-24 text-center text-rose-500 font-bold text-xs uppercase tracking-widest tracking-[0.2em]">Registry Synchronization Failed</div>';
+            }
+        }
+
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('generateBtn');
+            const originalText = btn.innerText;
+            btn.disabled = true; 
+            btn.innerText = 'PROVISIONING SECURE BATCH...';
+            
+            const eventSelect = document.getElementById('eventId');
+            const selected = eventSelect.options[eventSelect.selectedIndex];
+            
+            const payload = {
+                event_id: eventSelect.value,
+                ticket_type: document.getElementById('ticketType').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                event_name: selected.dataset.name || 'Event'
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`${data.count} BATCH ASSETS PROVISIONED`);
+                    // Automatically update after generation since user took action
+                    updateStats(); 
+                    loadRegistry(100);
+                } else {
+                    showToast(data.message.toUpperCase());
+                }
+            } catch (e) { showToast('COMMUNICATION TIMEOUT'); }
+            finally { btn.disabled = false; btn.innerText = originalText; }
+        });
+
+        function exportAssets(type) {
+            const tierFilter = document.getElementById('downloadTierFilter').value;
+            const eventSelect = document.getElementById('eventId');
+            if (!eventSelect.value) { showToast('SELECT EVENT TARGET'); return; }
+
+            const params = new URLSearchParams({
+                ticket_type: tierFilter,
+                event_id: eventSelect.value,
+                limit: 200 // Higher limit for exports
+            });
+            
+            const endpoint = type === 'pdf' ? 'download-pdf' : 'download-sheet';
+            window.location.href = `${API_BASE}/api/${endpoint}?${params}`;
+            showToast("SECURE EXPORT INITIATED");
+        }
+
+        // Initial setup on window load
+        window.onload = () => {
+            loadEvents(); 
+            updateStats();
+        };
+    </script>
+</body>
+</html>

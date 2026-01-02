@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs | EventPass Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #818cf8;
+            --primary-glow: rgba(129, 140, 248, 0.3);
+            --accent: #c084fc;
+            --bg-deep: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #34d399;
+            --danger: #fb7185;
+            --warning: #fbbf24;
+            --info: #38bdf8;
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Elements */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .orb-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; right: -50px; animation: float 15s infinite alternate; }
+        .orb-2 { width: 350px; height: 350px; background: var(--accent); bottom: -50px; left: -50px; animation: float 18s infinite alternate-reverse; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 40px) scale(1.1); }
+        }
+
+        /* Glossy Navbar */
+        .navbar {
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .clock-container {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--primary);
+            background: rgba(129, 140, 248, 0.1);
+            padding: 6px 14px;
+            border-radius: 99px;
+            border: 1px solid var(--primary-glow);
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+
+        .btn-glass {
+            background: var(--glass-highlight);
+            color: white;
+            border-color: var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(129, 140, 248, 0.5);
+            filter: brightness(1.1);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .glass-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        select.glass-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 18px;
+            padding-right: 45px;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            text-align: left;
+            padding: 1.25rem 1.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            vertical-align: middle;
+        }
+
+        tr {
+            transition: all 0.2s ease;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Log Components */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .badge-success { background: rgba(52, 211, 153, 0.15); color: var(--success); border-color: rgba(52, 211, 153, 0.2); }
+        .badge-danger { background: rgba(251, 113, 133, 0.15); color: var(--danger); border-color: rgba(251, 113, 133, 0.2); }
+        .badge-info { background: rgba(56, 189, 248, 0.15); color: var(--info); border-color: rgba(56, 189, 248, 0.2); }
+        .badge-warning { background: rgba(251, 191, 36, 0.15); color: var(--warning); border-color: rgba(251, 191, 36, 0.2); }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name { font-weight: 600; color: var(--text-main); }
+        .user-email { font-size: 0.8rem; color: var(--text-muted); }
+
+        .log-details {
+            max-width: 450px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-size: 0.875rem;
+        }
+
+        .timestamp {
+            font-weight: 600;
+            color: var(--text-main);
+            display: block;
+        }
+
+        .time-ago {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Loading & Empty States */
+        .state-container {
+            padding: 4rem;
+            text-align: center;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .refresh-icon {
+            display: inline-block;
+            transition: transform 0.5s ease;
+        }
+
+        .refreshing .refresh-icon {
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--glass-border); 
+            border-radius: 10px; 
+            border: 2px solid var(--bg-deep);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        @media (max-width: 900px) {
+            .nav-right .clock-container { display: none; }
+            .filters { flex-direction: column; }
+            .input-group { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="32" height="32" rx="8" fill="url(#brand-grad)"/>
+                <path d="M10 16L14 20L22 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                    <linearGradient id="brand-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#818CF8"/>
+                        <stop offset="1" stop-color="#C084FC"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            EventPass
+        </div>
+        <div class="nav-right">
+            <div class="clock-container" id="liveClock">00:00:00 AM</div>
+            <button class="btn btn-glass" onclick="refreshLogs(this)">
+                <span class="refresh-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                </span>
+                Refresh
+            </button>
+            <a href="/super-admin/dashboard" class="btn btn-primary" style="text-decoration: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="glass-card">
+            <div class="card-header">
+                <div class="filters">
+                    <div class="input-group">
+                        <select id="actionFilter" class="glass-input" onchange="loadLogs()">
+                            <option value="">All Global Activity</option>
+                            <optgroup label="Events Management">
+                                <option value="event_created">Event Created</option>
+                                <option value="event_updated">Event Updated</option>
+                                <option value="event_deleted">Event Deleted</option>
+                                <option value="event_activated">Event Activated</option>
+                                <option value="event_deactivated">Event Deactivated</option>
+                            </optgroup>
+                            <optgroup label="Access Control">
+                                <option value="admin_created">New Admin Created</option>
+                                <option value="admin_removed">Admin Removed</option>
+                                <option value="bouncer_created">Bouncer Onboarded</option>
+                                <option value="bouncer_removed">Bouncer Removed</option>
+                            </optgroup>
+                            <optgroup label="System & Security">
+                                <option value="global_event_control">Global Event Control</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="input-group" style="max-width: 200px;">
+                        <input type="date" id="dateFilter" class="glass-input" onchange="loadLogs()">
+                    </div>
+                </div>
+            </div>
+
+            <div id="logsTableContainer" class="table-wrapper">
+                <div class="state-container">
+                    <div class="loader"></div>
+                    <p style="color: var(--text-muted)">Synchronizing audit sequence...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Update Clock with Glow Effect
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            document.getElementById('liveClock').innerText = timeString + " IST";
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        /**
+         * Robust Timestamp Parser
+         */
+        function parseTimestamp(timestamp) {
+            if (!timestamp) return new Date();
+            
+            let date;
+            
+            // Handle MongoDB Extended JSON {$date: ...}
+            if (timestamp.$date) {
+                const d = timestamp.$date;
+                date = new Date(d.$numberLong ? parseInt(d.$numberLong) : d);
+            } 
+            else if (typeof timestamp === 'number') {
+                date = new Date(timestamp);
+            }
+            else if (typeof timestamp === 'string') {
+                let normalized = timestamp.replace(' ', 'T');
+                date = new Date(normalized);
+            } else {
+                date = new Date(timestamp);
+            }
+
+            // Adjust: Subtract 5 hours and 30 minutes (19,800,000 milliseconds) if server is UTC
+            // Remove this block if your server already sends IST
+            if (!isNaN(date.getTime())) {
+                const IST_OFFSET = (5 * 60 + 30) * 60 * 1000;
+                date = new Date(date.getTime() - IST_OFFSET);
+            }
+
+            return isNaN(date.getTime()) ? new Date() : date;
+        }
+
+        function getBadgeClass(type) {
+            const maps = {
+                // Event Actions
+                event_created: 'badge-success',
+                event_activated: 'badge-success',
+                event_updated: 'badge-info',
+                event_deactivated: 'badge-warning',
+                event_deleted: 'badge-danger',
+
+                // Admin/Bouncer Actions
+                admin_created: 'badge-success',
+                admin_removed: 'badge-danger',
+                bouncer_created: 'badge-success',
+                bouncer_removed: 'badge-danger',
+                
+                // System Actions
+                global_event_control: 'badge-warning',
+                system_settings_updated: 'badge-info',
+                pass_generated: 'badge-info',
+                pass_scanned: 'badge-success'
+            };
+            return maps[type] || 'badge-info';
+        }
+
+        function getAvatar(name) {
+            if (!name || name === 'System') return 'SY';
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        async function refreshLogs(btn) {
+            btn.classList.add('refreshing');
+            await loadLogs();
+            setTimeout(() => {
+                btn.classList.remove('refreshing');
+            }, 600);
+        }
+
+        async function loadLogs() {
+            const container = document.getElementById('logsTableContainer');
+            const actionType = document.getElementById('actionFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            let url = '/super-admin/api/audit-logs';
+            const params = new URLSearchParams();
+            if (actionType) params.append('action_type', actionType);
+            if (dateFilter) params.append('date', dateFilter);
+            
+            const queryString = params.toString();
+            if (queryString) url += '?' + queryString;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.logs && data.logs.length > 0) {
+                    let html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Sequence Time</th>
+                                    <th>Action Node</th>
+                                    <th>Identity</th>
+                                    <th>Event Protocol Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.logs.forEach(log => {
+                        const date = parseTimestamp(log.timestamp);
+                        const displayAction = (log.action_type || 'unknown').replace(/_/g, ' ');
+                        const performer = log.performed_by_name || 'System';
+                        
+                        html += `
+                            <tr>
+                                <td>
+                                    <span class="timestamp">${date.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                                    <span class="time-ago">${date.toLocaleTimeString('en-IN', {hour: '2-digit', minute:'2-digit', second: '2-digit', hour12: true})}</span>
+                                </td>
+                                <td>
+                                    <span class="badge ${getBadgeClass(log.action_type)}">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: currentColor;"></span>
+                                        ${displayAction}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="avatar">${getAvatar(performer)}</div>
+                                        <div class="user-details">
+                                            <span class="user-name">${performer}</span>
+                                            <span class="user-email">${log.performed_by_email || ''}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><div class="log-details">${log.details || '—'}</div></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="state-container">
+                            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🔍</div>
+                            <p style="color: var(--text-muted)">No audit sequences found for the selected criteria.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="state-container">
+                        <p style="color: var(--danger)">Connection interrupt: Unable to synchronize with the audit server.</p>
+                        <button class="btn btn-glass" style="margin: 1rem auto;" onclick="loadLogs()">Retry Sync</button>
+                    </div>
+                `;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadLogs);
+    </script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Elite System | Registration</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f0f4f8;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: fixed linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 3rem 2.5rem;
+            box-shadow: var(--shadow-lg);
+            max-width: 520px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .logo h1 {
+            color: var(--text-main);
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+        }
+
+        .logo p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Form Styling */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Password Strength */
+        .password-strength {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.4s ease;
+        }
+
+        .strength-weak { background: var(--danger); width: 33%; }
+        .strength-medium { background: var(--warning); width: 66%; }
+        .strength-strong { background: var(--success); width: 100%; }
+
+        .btn-register {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+            margin-top: 1rem;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-register:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        /* Custom Notification */
+        #notificationContainer {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <div class="register-container">
+        <div class="logo">
+            <span class="logo-icon">🎫</span>
+            <h1>Create Account</h1>
+            <p>Join the Elite Event Pass System</p>
+        </div>
+
+        <form id="registerForm" class="form-grid">
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" id="name" class="form-input" required placeholder="Enter your full name" maxlength="100">
+            </div>
+
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" id="email" class="form-input" required placeholder="name@example.com">
+            </div>
+
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone" class="form-input" placeholder="+91 0000000000" maxlength="15">
+                <small>Optional: used for ticket SMS notifications</small>
+            </div>
+
+            <div class="form-group">
+                <label>Password *</label>
+                <input type="password" id="password" class="form-input" required placeholder="Create a strong password" minlength="8">
+                <div class="password-strength">
+                    <div id="strengthBar" class="strength-bar"></div>
+                </div>
+                <small id="passwordHelp">Minimum 8 characters with numbers and symbols</small>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password *</label>
+                <input type="password" id="confirmPassword" class="form-input" required placeholder="Verify your password">
+            </div>
+
+            <button type="submit" class="btn-register" id="registerBtn">Create System Account</button>
+        </form>
+
+        <div class="links">
+            <p>Already have an account? <a href="/auth/login?role=user">Secure Login</a></p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * NOTIFICATIONS
+         */
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colors = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1' };
+            note.style.borderLeftColor = colors[type] || colors.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span style="font-size: 0.9rem; font-weight: 600;">${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 5000);
+        }
+
+        /**
+         * PASSWORD STRENGTH LOGIC
+         */
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strengthBar');
+        const passwordHelp = document.getElementById('passwordHelp');
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.length >= 8) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+            
+            strengthBar.className = 'strength-bar';
+            
+            if (password.length === 0) {
+                strengthBar.style.width = '0%';
+                passwordHelp.textContent = 'Minimum 8 characters with numbers and symbols';
+                passwordHelp.style.color = '';
+            } else if (strength <= 2) {
+                strengthBar.classList.add('strength-weak');
+                passwordHelp.textContent = 'Weak password - add more variety';
+                passwordHelp.style.color = '#ef4444';
+            } else if (strength <= 4) {
+                strengthBar.classList.add('strength-medium');
+                passwordHelp.textContent = 'Medium strength - almost there!';
+                passwordHelp.style.color = '#f59e0b';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                passwordHelp.textContent = 'Strong password ✓';
+                passwordHelp.style.color = '#10b981';
+            }
+        });
+
+        /**
+         * SESSION CLEANUP
+         */
+        function clearAllSessions() {
+            localStorage.clear();
+            sessionStorage.clear();
+            // Clear standard cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+        }
+
+        // Run cleanup on page load to prevent stale sessions from interfering with new registrations
+        window.addEventListener('load', clearAllSessions);
+
+        /**
+         * REGISTRATION HANDLER
+         */
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const registerBtn = document.getElementById('registerBtn');
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showNotification('Passwords do not match. Please verify.', 'danger');
+                return;
+            }
+            
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Provisioning Account...';
+            
+            // Re-clear sessions right before the network request
+            clearAllSessions();
+            
+            try {
+                const response = await fetch('/auth/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value.trim(),
+                        email: document.getElementById('email').value.trim(),
+                        phone: document.getElementById('phone').value.trim(),
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Account created successfully! Preparing secure login...', 'success');
+                    
+                    // Force a server-side session cleanup attempt
+                    try { await fetch('/auth/api/logout', { method: 'POST' }); } catch (e) {}
+                    
+                    setTimeout(() => {
+                        window.location.replace('/auth/login?role=user&registration=success');
+                    }, 1500);
+                } else {
+                    showNotification(data.message || 'Registration encountered an error', 'danger');
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Create System Account';
+                }
+            } catch (error) {
+                showNotification('Network communication failure. Please retry.', 'danger');
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Create System Account';
+            }
+        });
+    </script>
+</body>
+</html>

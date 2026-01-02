@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Admin | Event Pass System</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.75rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+            text-decoration: none;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            border-radius: 99px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #fef2f2;
+            border-color: var(--danger);
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary:hover {
+            background: #eef2ff;
+            border-color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon-wrapper {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .icon-users { background: #e0e7ff; color: #4338ca; }
+        .icon-events { background: #fef3c7; color: #b45309; }
+        .icon-passes { background: #dcfce7; color: #15803d; }
+        .icon-bouncers { background: #e0f2fe; color: #0369a1; }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .stat-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Tabs */
+        .tabs-header {
+            background: white;
+            padding: 4px;
+            border-radius: 12px;
+            display: inline-flex;
+            gap: 4px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Card & Tables */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 { font-size: 1.125rem; font-weight: 700; }
+
+        .table-container { width: 100%; overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+
+        th {
+            background: #f8fafc;
+            padding: 12px 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        td { padding: 1rem 1.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--border); }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f1f5f9; }
+
+        /* Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #e0f2fe; color: #0369a1; }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-body { padding: 2rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        .form-input:focus, .form-select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem; }
+        .alert-error { background: #fee2e2; color: #991b1b; }
+        .alert-success { background: #dcfce7; color: #166534; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .loading-text { text-align: center; padding: 3rem; color: var(--text-muted); }
+
+        /* Custom Notification */
+        #notificationContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="brand">
+                <span style="font-size: 1.5rem;">👑</span>
+                <span>ELITE ADMIN</span>
+            </a>
+            <div class="user-menu">
+                <!-- Manual Reload Button -->
+                <button class="btn-secondary" id="reloadBtn" onclick="reloadAllData()">
+                    <span id="reloadIcon">🔄</span> Reload
+                </button>
+                <div class="admin-profile">
+                    <div class="avatar-circle" id="adminAvatar">A</div>
+                    <span id="adminName">Loading...</span>
+                </div>
+                <!-- Re-added Change Password Button if needed -->
+                <button class="btn-secondary" onclick="showChangePasswordModal()">🔒 Password</button>
+                <button class="btn-logout" id="logoutBtn" onclick="handleLogout()">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-users">👥</div>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-subtext"><span id="newUsers" style="color: var(--success); font-weight: 600;">0</span> new today</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-events">📅</div>
+                <div class="stat-label">Active Events</div>
+                <div class="stat-value" id="totalEvents">0</div>
+                <div class="stat-subtext"><span id="totalEventsAll">0</span> total events</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-passes">🎫</div>
+                <div class="stat-label">Passes Sold</div>
+                <div class="stat-value" id="totalPasses">0</div>
+                <div class="stat-subtext">Scan rate: <span id="scanRate" style="font-weight: 600;">0%</span></div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon-wrapper icon-bouncers">🛂</div>
+                <div class="stat-label">Security Staff</div>
+                <div class="stat-value" id="totalBouncers">0</div>
+                <div class="stat-subtext"><span id="activeAssignments" style="font-weight: 600;">0</span> on duty</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-header">
+            <button class="tab-btn active" id="tabUsers" onclick="switchTab('users')">Users</button>
+            <button class="tab-btn" id="tabBouncers" onclick="switchTab('bouncers')">Bouncers</button>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" class="card tab-content active">
+            <div class="card-header">
+                <h2>User Directory</h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Orders</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody">
+                        <tr><td colspan="6" class="loading-text">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bouncers Tab -->
+        <div id="bouncersTab" class="card tab-content">
+            <div class="card-header">
+                <h2>Security Roster</h2>
+                <button class="btn btn-primary" onclick="showCreateBouncerModal()">+ Onboard Staff</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Assigned Event</th>
+                            <th>Scans</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bouncersBody">
+                        <tr><td colspan="7" class="loading-text">Loading staff...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Bouncer Modal -->
+    <div id="createBouncerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">Onboard New Security Staff</h3>
+                    <button onclick="closeBouncerModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                </div>
+                <div id="modalAlert"></div>
+                <form id="createBouncerForm" onsubmit="handleCreateBouncer(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="bouncerName" class="form-input" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="bouncerEmail" class="form-input" placeholder="john@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" id="bouncerPhone" class="form-input" placeholder="10-digit number" required pattern="[0-9]{10}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Set Password *</label>
+                        <input type="password" id="bouncerPassword" class="form-input" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" id="bouncerPasswordConfirm" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assign to Event *</label>
+                        <select id="eventSelect" class="form-select" required>
+                            <option value="" disabled selected>-- Select an Event --</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitBouncerBtn" style="width: 100%; padding: 12px; font-weight: 700;">
+                        Create Staff Account
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body">
+                <h3 id="confirmTitle" style="margin-bottom: 0.5rem; font-weight: 700;">Confirm Action</h3>
+                <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 1.5rem;">Are you sure you want to proceed?</p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn" style="background: #f1f5f9; color: var(--text-main)" onclick="resolveConfirmAction(false)">Cancel</button>
+                    <button class="btn btn-primary" id="confirmActionBtn" onclick="resolveConfirmAction(true)">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * GLOBAL HELPERS
+         */
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            
+            const colorMap = {
+                'success': '#10b981',
+                'danger': '#ef4444',
+                'info': '#6366f1',
+                'warning': '#f59e0b'
+            };
+            note.style.borderLeftColor = colorMap[type] || colorMap.info;
+            
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 4000);
+        }
+
+        let resolveConfirm;
+        function customConfirm(title, message, btnClass = 'btn-primary') {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const btn = document.getElementById('confirmActionBtn');
+            btn.className = `btn ${btnClass}`;
+            
+            document.getElementById('confirmModal').classList.add('active');
+            
+            return new Promise((resolve) => {
+                resolveConfirm = resolve;
+            });
+        }
+
+        function resolveConfirmAction(value) {
+            document.getElementById('confirmModal').classList.remove('active');
+            if (resolveConfirm) {
+                resolveConfirm(value);
+                resolveConfirm = null; 
+            }
+        }
+
+        /**
+         * RELOAD LOGIC
+         */
+        let currentTab = 'users';
+
+        async function reloadAllData() {
+            const btn = document.getElementById('reloadBtn');
+            const icon = document.getElementById('reloadIcon');
+            
+            btn.disabled = true;
+            icon.classList.add('spinning');
+            btn.innerHTML = `<span id="reloadIcon" class="spinning">🔄</span> Refreshing...`;
+
+            try {
+                // Execute all loaders
+                await Promise.all([
+                    loadProfile(),
+                    loadStats(),
+                    currentTab === 'users' ? loadUsers() : loadBouncers()
+                ]);
+                showNotification("Dashboard updated", "success");
+            } catch (error) {
+                showNotification("Refresh failed", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span id="reloadIcon">🔄</span> Reload`;
+            }
+        }
+
+        /**
+         * CORE LOGIC
+         */
+        async function loadProfile() {
+            try {
+                const response = await fetch('/auth/api/profile');
+                const data = await response.json();
+                if (data.success) {
+                    const name = data.user.name || "Administrator";
+                    document.getElementById('adminName').textContent = name;
+                    document.getElementById('adminAvatar').textContent = name.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                document.getElementById('adminName').textContent = "System Admin";
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/admin/api/stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const s = data.stats;
+                    
+                    document.getElementById('totalUsers').textContent = s.users?.total || 0;
+                    document.getElementById('newUsers').textContent = s.users?.new_today || 0;
+                    
+                    document.getElementById('totalEvents').textContent = s.events?.active || 0;
+                    document.getElementById('totalEventsAll').textContent = s.events?.total || 0;
+                    
+                    document.getElementById('totalPasses').textContent = s.passes?.total || 0;
+                    
+                    const scanRateValue = s.passes?.total > 0 
+                        ? ((s.passes?.scanned / s.passes?.total) * 100).toFixed(1)
+                        : (s.passes?.scan_rate || 0);
+                    document.getElementById('scanRate').textContent = scanRateValue + '%';
+                    
+                    document.getElementById('totalBouncers').textContent = s.bouncers?.total_bouncers || s.bouncers?.total || 0;
+                    document.getElementById('activeAssignments').textContent = s.bouncers?.active_assignments || 0;
+                }
+            } catch (error) {
+                console.error('Stats load failed');
+            }
+        }
+
+        async function handleLogout() {
+            const confirmed = await customConfirm("Sign Out", "Are you sure you want to end your current session?", "btn-danger");
+            if (!confirmed) return;
+
+            const btn = document.getElementById('logoutBtn');
+            btn.disabled = true;
+            btn.textContent = "Closing...";
+
+            try {
+                await fetch('/auth/api/logout', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                sessionStorage.clear();
+                localStorage.clear();
+                
+                showNotification("Signed out successfully", "success");
+                
+                setTimeout(() => {
+                    window.location.replace('/auth/login?logout=success&t=' + Date.now());
+                }, 150);
+
+            } catch (error) {
+                window.location.replace('/auth/login?logout=fallback');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const isActive = btn.id.toLowerCase().includes(tab);
+                btn.classList.toggle('active', isActive);
+            });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const activeTab = document.getElementById(`${tab}Tab`);
+            if (activeTab) activeTab.classList.add('active');
+            
+            if (tab === 'users') loadUsers();
+            else if (tab === 'bouncers') loadBouncers();
+        }
+
+        async function loadUsers() {
+            const tbody = document.getElementById('usersBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-text">Fetching user directory...</td></tr>';
+            try {
+                const response = await fetch('/admin/api/user');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Users API Response:', data); // Debug logging
+                
+                // Flexible parsing to handle various response structures
+                const usersList = data.users || data.data || (Array.isArray(data) ? data : []);
+                const isSuccess = data.success !== false; // Changed logic to be more forgiving
+
+                if (usersList && usersList.length > 0) {
+                    tbody.innerHTML = usersList.map(user => {
+                        // More robust date parsing
+                        let date = 'N/A';
+                        if (user.created_at) {
+                            if (user.created_at.$date) {
+                                date = new Date(user.created_at.$date).toLocaleDateString();
+                            } else if (typeof user.created_at === 'string' || typeof user.created_at === 'number') {
+                                date = new Date(user.created_at).toLocaleDateString();
+                            }
+                        }
+                        
+                        // More robust ID extraction
+                        const userId = user._id?.$oid || user._id || user.id;
+                        const isActive = user.is_active !== false;
+                        
+                        return `
+                            <tr>
+                                <td><strong>${user.name || 'Unknown'}</strong></td>
+                                <td style="color: var(--text-muted)">${user.email || 'N/A'}</td>
+                                <td>${user.order_count || 0} passes</td>
+                                <td>${date}</td>
+                                <td><span class="badge ${isActive ? 'badge-success' : 'badge-danger'}">${isActive ? 'Active' : 'Inactive'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm ${isActive ? 'btn-danger' : 'btn-success'}" 
+                                            onclick="toggleUserStatus('${userId}', ${!isActive})">
+                                        ${isActive ? 'Block' : 'Unblock'}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    console.warn('No users in response or empty array');
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">No users registered yet. Users who sign up will appear here.</td></tr>';
+                }
+            } catch (e) { 
+                console.error('Error loading users:', e);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--danger);">Error loading users: ${e.message}</td></tr>`; 
+            }
+        }
+        async function loadBouncers() {
+            const tbody = document.getElementById('bouncersBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Fetching staff records...</td></tr>';
+            try {
+                const response = await fetch('/bouncer/api/list');
+                const data = await response.json();
+                if (data.success && data.bouncers && data.bouncers.length > 0) {
+                    tbody.innerHTML = data.bouncers.map(bouncer => `
+                        <tr>
+                            <td><strong>${bouncer.user_name || 'Unknown'}</strong></td>
+                            <td style="color: var(--text-muted)">${bouncer.user_email || 'N/A'}</td>
+                            <td>${bouncer.user_phone || 'N/A'}</td>
+                            <td><span style="font-weight: 500">${bouncer.event_name || 'Unassigned'}</span></td>
+                            <td><strong>${bouncer.scans_count || 0}</strong></td>
+                            <td><span class="badge ${bouncer.status === 'active' ? 'badge-success' : 'badge-danger'}">${bouncer.status || 'inactive'}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="handleDeleteBouncer('${bouncer._id?.$oid || bouncer._id}')">Remove</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="loading-text">No security staff onboarded yet.</td></tr>';
+                }
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Error loading records.</td></tr>'; }
+        }
+
+        async function handleDeleteBouncer(id) {
+            const confirmed = await customConfirm("Remove Staff", "Permanently delete this staff account?", "btn-danger");
+            if (!confirmed) return;
+            try {
+                const res = await fetch(`/bouncer/api/delete/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification("Staff member removed", "success");
+                    loadBouncers();
+                    loadStats();
+                }
+            } catch (e) { showNotification("Delete failed", "danger"); }
+        }
+
+        /**
+         * MODAL LOGIC
+         */
+        async function showCreateBouncerModal() {
+            document.getElementById('createBouncerModal').classList.add('active');
+            document.getElementById('modalAlert').innerHTML = '';
+            document.getElementById('createBouncerForm').reset();
+            
+            const eventSelect = document.getElementById('eventSelect');
+            eventSelect.innerHTML = '<option value="" disabled selected>-- Select an Event --</option>';
+            
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                if (data.success && data.events) {
+                    data.events.forEach(ev => {
+                        const eventId = ev._id?.$oid || ev._id;
+                        eventSelect.innerHTML += `<option value="${eventId}">${ev.name || ev.title}</option>`;
+                    });
+                }
+            } catch (e) { console.error('Events load error'); }
+        }
+
+        function closeBouncerModal() {
+            document.getElementById('createBouncerModal').classList.remove('active');
+        }
+
+        async function handleCreateBouncer(event) {
+            event.preventDefault();
+            const password = document.getElementById('bouncerPassword').value;
+            const passwordConfirm = document.getElementById('bouncerPasswordConfirm').value;
+            const alertDiv = document.getElementById('modalAlert');
+            
+            if (password !== passwordConfirm) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Passwords do not match</div>`;
+                return;
+            }
+            
+            const submitBtn = document.getElementById('submitBouncerBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Onboarding...';
+            
+            try {
+                const response = await fetch('/bouncer/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('bouncerName').value.trim(),
+                        email: document.getElementById('bouncerEmail').value.trim(),
+                        phone: document.getElementById('bouncerPhone').value.trim(),
+                        password: password,
+                        event_id: document.getElementById('eventSelect').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alertDiv.innerHTML = `<div class="alert alert-success">✅ Staff account created!</div>`;
+                    setTimeout(() => {
+                        closeBouncerModal();
+                        loadBouncers();
+                        loadStats();
+                        showNotification("New staff onboarded", "success");
+                    }, 1000);
+                } else {
+                    alertDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message || 'Failed to create account'}</div>`;
+                }
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Network error.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Staff Account';
+            }
+        }
+
+        // Initialize
+        window.onload = () => {
+            loadProfile();
+            loadStats();
+            loadUsers();
+        };
+    </script>
+</body>
+</html>

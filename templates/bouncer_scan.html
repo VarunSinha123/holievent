@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner | Elite Entry Control</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: fixed linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; }
+
+        /* Navbar Header */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 12px;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 700;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            font-size: 0.875rem;
+            border: 1px solid white;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover { transform: translateX(-4px); background: white; }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+        }
+
+        /* Main Card */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .event-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 12px;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .admin-indicator {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 99px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        /* Scanner Styling */
+        #reader {
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            border: none !important;
+            background: #000;
+            min-height: 300px;
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Custom Scanner Button Overrides */
+        #reader__dashboard_section_csr button {
+            background: var(--primary) !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 24px !important;
+            border-radius: 12px !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            margin-bottom: 10px !important;
+        }
+
+        .btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-stop {
+            background: var(--danger);
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+
+        /* Results Overlay */
+        .result-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 1.5rem;
+        }
+
+        .result-content {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            border-radius: 32px;
+            text-align: center;
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes pop {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .result-icon { font-size: 4rem; margin-bottom: 1rem; }
+        .result-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 1.5rem; }
+        
+        .detail-card {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.875rem;
+        }
+
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row span { color: var(--text-muted); font-weight: 500; }
+        .detail-row strong { color: var(--text-main); font-weight: 700; }
+
+        .btn-next {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            background: var(--text-main);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        /* Selection List */
+        .event-item {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 1.25rem;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            box-shadow: var(--shadow);
+        }
+
+        .event-item:hover {
+            border-color: var(--primary);
+            background: #f5f3ff;
+            transform: scale(1.02);
+        }
+
+        .event-item h4 { font-weight: 700; margin-bottom: 4px; }
+        .event-item p { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Notifications */
+        #notificationContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <div class="container">
+        <div class="header">
+            <a href="/bouncer/dashboard" class="back-btn">← Home</a>
+            <h2 class="page-title" id="pageTitle">QR Terminal</h2>
+        </div>
+
+        <div id="mainCard" class="card">
+            <div id="eventInfo" class="event-badge">
+                <div class="loader"></div> <span style="margin-left: 8px;">Authenticating Duty...</span>
+            </div>
+            
+            <div id="scannerSection" style="display: none;">
+                <div id="reader"></div>
+                
+                <div id="cameraControls" style="display: none;">
+                    <button id="stopBtn" class="btn btn-stop" onclick="toggleScanner()">
+                        <span>🛑</span> Stop Scanning
+                    </button>
+                </div>
+
+                <div id="startControls">
+                    <button class="btn btn-primary" onclick="toggleScanner()">
+                        <span>📷</span> Launch Camera
+                    </button>
+                </div>
+            </div>
+
+            <div id="selectionSection" style="display: none; padding: 1rem 0;">
+                <h3 style="font-weight: 800; margin-bottom: 0.5rem;">Select Your Duty</h3>
+                <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.875rem;">Choose the gate assignment you are currently monitoring:</p>
+                <div id="assignmentsList">
+                    <!-- Events loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultOverlay" class="result-overlay">
+        <div class="result-content" id="resultContent">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+
+    <script>
+        /**
+         * UTILITIES
+         */
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colors = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1', 'warning': '#f59e0b' };
+            note.style.borderLeftColor = colors[type] || colors.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span style="font-size: 0.85rem; font-weight: 600;">${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 4000);
+        }
+
+        function playSound(isSuccess) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if (isSuccess) {
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            }
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        /**
+         * SCANNER CORE
+         */
+        let scanner = null;
+        let isScanning = false;
+        let eventId = new URLSearchParams(window.location.search).get('event_id') || sessionStorage.getItem('last_bouncer_event_id');
+
+        window.onload = function() {
+            if (!eventId) {
+                loadAssignedEvents();
+            } else {
+                validateAndLoadEvent(eventId);
+            }
+        };
+
+        async function validateAndLoadEvent(id) {
+            try {
+                const res = await fetch(`/bouncer/api/event-info/${id}`);
+                const data = await res.json();
+                if(data.success) {
+                    eventId = id;
+                    sessionStorage.setItem('last_bouncer_event_id', id);
+                    document.getElementById('eventInfo').innerHTML = `
+                        <div style="font-size: 1rem;">${data.name}</div>
+                        <div style="font-size: 0.7rem; font-weight: 500; opacity: 0.7; margin-top: 4px;">📍 ${data.venue} • 📅 ${data.date}</div>
+                    `;
+                    document.getElementById('scannerSection').style.display = 'block';
+                    document.getElementById('selectionSection').style.display = 'none';
+                } else {
+                    loadAssignedEvents();
+                }
+            } catch (e) {
+                loadAssignedEvents();
+            }
+        }
+
+        async function loadAssignedEvents() {
+            document.getElementById('eventInfo').innerHTML = "Assignment Required";
+            document.getElementById('selectionSection').style.display = 'block';
+            document.getElementById('scannerSection').style.display = 'none';
+            const list = document.getElementById('assignmentsList');
+            list.innerHTML = '<div style="padding:20px; text-align:center;"><div class="loader"></div></div>';
+
+            try {
+                const res = await fetch('/bouncer/api/event');
+                const data = await res.json();
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    const adminBadge = data.is_admin_view ? '<div class="admin-indicator">Admin Access: All Active Events</div>' : '';
+                    
+                    list.innerHTML = adminBadge + data.events.map(ev => `
+                        <div class="event-item" onclick="validateAndLoadEvent('${ev.event_id}')">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4 style="margin:0;">${ev.event_name}</h4>
+                                <span style="font-size:0.7rem; background:#eee; padding:2px 6px; border-radius:4px;">Select</span>
+                            </div>
+                            <p style="margin-top:4px;">📅 ${ev.event_date} | 🚩 Gate: ${ev.gate_name}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `
+                        <div style="padding:20px; text-align:center;">
+                            <p style="color: var(--danger); font-weight: 600;">No active events found.</p>
+                            <p style="font-size:0.8rem; color:var(--text-muted);">Please ensure events are marked as "Active" in the dashboard.</p>
+                        </div>`;
+                }
+            } catch (e) {
+                list.innerHTML = '<p style="text-align:center; padding:20px;">Error connecting to server.</p>';
+            }
+        }
+
+        function toggleScanner() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!isScanning) {
+                document.getElementById('startControls').style.display = 'none';
+                document.getElementById('cameraControls').style.display = 'block';
+                startScanner();
+            } else {
+                document.getElementById('startControls').style.display = 'block';
+                document.getElementById('cameraControls').style.display = 'none';
+                stopScanner();
+            }
+            isScanning = !isScanning;
+        }
+
+        function startScanner() {
+            scanner = new Html5QrcodeScanner("reader", { 
+                fps: 20, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            });
+            scanner.render(onScanSuccess, () => {});
+        }
+
+        function stopScanner() {
+            if (scanner) {
+                scanner.clear().catch(() => {});
+                scanner = null;
+            }
+        }
+
+        let isProcessing = false;
+        async function onScanSuccess(decodedText) {
+            if (isProcessing) return;
+            let serial = decodedText;
+            try {
+                const parsed = JSON.parse(decodedText);
+                serial = parsed.serial || parsed.id || decodedText;
+            } catch(e) {}
+            verifySerial(serial);
+        }
+
+        async function verifySerial(serial) {
+            if (isProcessing) return;
+            isProcessing = true;
+            
+            try {
+                const res = await fetch('/bouncer/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ serial_number: serial, event_id: eventId })
+                });
+                const data = await res.json();
+                showResult(data);
+            } catch (e) {
+                showResult({ success: false, message: "Connection error" });
+            } finally {
+                setTimeout(() => { isProcessing = false; }, 2500);
+            }
+        }
+
+        /**
+         * UPDATED: Adjusts UTC to IST by subtracting 5h 30m as requested
+         * and formats both Date and Time.
+         */
+        function getAdjustedDateTime(rawTime) {
+            if (!rawTime) return { date: '---', time: '---' };
+            
+            const dateStr = rawTime.$date || rawTime;
+            const dateObj = new Date(dateStr);
+            
+            // Subtracting 5 hours and 30 minutes offset
+            const offsetMs = (5 * 60 + 30) * 60 * 1000;
+            const adjustedDate = new Date(dateObj.getTime() - offsetMs);
+            
+            return {
+                date: adjustedDate.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }),
+                time: adjustedDate.toLocaleTimeString([], {
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true
+                })
+            };
+        }
+
+        function showResult(data) {
+            const overlay = document.getElementById('resultOverlay');
+            const content = document.getElementById('resultContent');
+            const isSuccess = data.success;
+            const isDuplicate = data.status === 'already_scanned';
+
+            playSound(isSuccess);
+
+            let html = `
+                <div class="result-icon">${isSuccess ? '✅' : (isDuplicate ? '⚠️' : '❌')}</div>
+                <div class="result-title" style="color: ${isSuccess ? 'var(--success)' : (isDuplicate ? 'var(--warning)' : 'var(--danger)')}">
+                    ${data.message}
+                </div>
+            `;
+
+            if (data.details || data.pass_info) {
+                const details = data.details || data.pass_info;
+                const scanTime = details.scanned_at || details.first_scan;
+                const adjusted = getAdjustedDateTime(scanTime);
+                
+                html += `
+                    <div class="detail-card">
+                        <div class="detail-row"><span>Name</span><strong>${details.attendee_name || details.holder_name || '---'}</strong></div>
+                        <div class="detail-row"><span>Tier</span><strong>${details.ticket_type || 'General'}</strong></div>
+                        <div class="detail-row"><span>Serial</span><strong>${details.serial_number}</strong></div>
+                        <div class="detail-row"><span>Scan Date</span><strong>${adjusted.date}</strong></div>
+                        <div class="detail-row"><span>Scan Time</span><strong>${adjusted.time}</strong></div>
+                    </div>
+                `;
+            }
+
+            html += `<button class="btn-next" onclick="closeModal()">Next Scan</button>`;
+            
+            content.style.borderTop = `12px solid ${isSuccess ? 'var(--success)' : (isDuplicate ? 'var(--warning)' : 'var(--danger)')}`;
+            content.innerHTML = html;
+            overlay.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('resultOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

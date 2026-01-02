@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Pass | Elite Event System</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f0f4f8;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: fixed linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-4px);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 32px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--text-main);
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            text-align: center;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: white;
+            color: var(--text-main);
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input[readonly] {
+            background-color: #f1f5f9;
+            cursor: not-allowed;
+            border-style: solid;
+            color: var(--text-muted);
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-generate:disabled {
+            background: var(--secondary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Result Section */
+        .result {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 24px;
+            display: none;
+            text-align: center;
+            border: 2px solid var(--primary);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result.success { display: block; }
+
+        .sequence-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 8px 24px;
+            border-radius: 99px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            border: 2px solid #fde68a;
+        }
+
+        .pass-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            display: block;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border);
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--success);
+            color: white;
+            text-decoration: none;
+            border-radius: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #059669;
+            transform: scale(1.05);
+        }
+
+        /* Notifications */
+        #notificationContainer {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <div class="container">
+        <a href="/" class="back-btn">← System Dashboard</a>
+        
+        <div class="card">
+            <h1><span>🎟️</span> Pass Generation</h1>
+            
+            <form id="generateForm">
+                <div class="form-group">
+                    <label for="eventId">Select Event *</label>
+                    <select id="eventId" class="form-select" required>
+                        <option value="">Fetching system events...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Event Name</label>
+                    <input type="text" id="eventName" class="form-input" placeholder="System auto-fill" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Attendee Full Name *</label>
+                    <input type="text" id="name" class="form-input" required maxlength="100" placeholder="e.g. Johnathan Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ticketType">Ticket Tier *</label>
+                    <select id="ticketType" class="form-select" required>
+                        <option value="">Select event first</option>
+                    </select>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="text" id="eventDate" class="form-input" placeholder="Auto-fill" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Entry Time</label>
+                        <input type="text" id="eventTime" class="form-input" placeholder="Auto-fill" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Venue Location</label>
+                    <input type="text" id="venue" class="form-input" placeholder="Auto-fill" readonly>
+                </div>
+                
+                <button type="submit" class="btn-generate" id="submitBtn" disabled>Generate Digital Pass</button>
+            </form>
+            
+            <div id="result" class="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        /**
+         * NOTIFICATIONS
+         */
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colors = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1' };
+            note.style.borderLeftColor = colors[type] || colors.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span style="font-size: 0.9rem; font-weight: 600;">${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 5000);
+        }
+
+        /**
+         * PASS GENERATION LOGIC
+         */
+        let events = [];
+        
+        async function loadEvents() {
+            const eventSelect = document.getElementById('eventId');
+            const submitBtn = document.getElementById('submitBtn');
+
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                
+                if (data.success && data.events && data.events.length > 0) {
+                    events = data.events;
+                    eventSelect.innerHTML = '<option value="">-- Choose System Event --</option>';
+                    
+                    data.events.forEach(event => {
+                        const eventId = event._id.$oid || event._id;
+                        const option = document.createElement('option');
+                        option.value = eventId;
+                        option.textContent = event.name;
+                        
+                        option.dataset.name = event.name;
+                        option.dataset.date = event.date || 'TBD';
+                        option.dataset.time = event.time || '08:00 PM';
+                        option.dataset.venue = event.venue || event.location || 'TBD';
+                        
+                        // Store ticket types data
+                        if (event.ticket_types && event.ticket_types.length > 0) {
+                            option.dataset.ticketTypes = JSON.stringify(event.ticket_types);
+                        }
+                        
+                        eventSelect.appendChild(option);
+                    });
+                    submitBtn.disabled = false;
+                } else {
+                    eventSelect.innerHTML = '<option value="">No events available</option>';
+                    showNotification('No active events found in the database.', 'info');
+                }
+            } catch (error) {
+                eventSelect.innerHTML = '<option value="">System connection error</option>';
+                showNotification('Failed to sync with event service.', 'danger');
+            }
+        }
+        
+        document.getElementById('eventId').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const ticketTypeSelect = document.getElementById('ticketType');
+            
+            if (selected && selected.value) {
+                document.getElementById('eventName').value = selected.dataset.name;
+                document.getElementById('eventDate').value = selected.dataset.date;
+                document.getElementById('eventTime').value = selected.dataset.time;
+                document.getElementById('venue').value = selected.dataset.venue;
+                
+                // Parse and populate ticket types
+                const ticketTypesData = selected.dataset.ticketTypes;
+                
+                if (ticketTypesData) {
+                    try {
+                        const ticketTypes = JSON.parse(ticketTypesData);
+                        ticketTypeSelect.innerHTML = '<option value="">-- Select Ticket Tier --</option>';
+                        
+                        ticketTypes.forEach(ticket => {
+                            const option = document.createElement('option');
+                            option.value = ticket.name;
+                            option.textContent = `${ticket.name} (₹${ticket.price})`;
+                            ticketTypeSelect.appendChild(option);
+                        });
+                    } catch (e) {
+                        console.error('Error parsing ticket types:', e);
+                        ticketTypeSelect.innerHTML = '<option value="">Error loading ticket types</option>';
+                    }
+                } else {
+                    ticketTypeSelect.innerHTML = '<option value="">No ticket types available</option>';
+                }
+            } else {
+                ['eventName', 'eventDate', 'eventTime', 'venue'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                ticketTypeSelect.innerHTML = '<option value="">Select event first</option>';
+            }
+        });
+        
+        document.getElementById('generateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+            
+            const payload = {
+                event_id: document.getElementById('eventId').value,
+                event_name: document.getElementById('eventName').value,
+                name: document.getElementById('name').value.trim(),
+                ticket_type: document.getElementById('ticketType').value,
+                event_time: document.getElementById('eventTime').value,
+                event_date: document.getElementById('eventDate').value,
+                venue: document.getElementById('venue').value
+            };
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'PROVISIONING...';
+            
+            try {
+                const response = await fetch('/pass/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const res = await response.json();
+                if (res.success) {
+                    const pass = res.passes ? res.passes[0] : res;
+                    const seq = String(res.sequence_number || pass.sequence_number).padStart(3, '0');
+                    
+                    showNotification('Digital pass generated successfully!', 'success');
+                    
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3 style="font-weight: 800; color: var(--text-main);">PASS AUTHENTICATED</h3>
+                        <div class="sequence-badge">#${seq}</div>
+                        <p style="font-weight: 700; margin-bottom: 4px; color: var(--text-main);">${payload.name}</p>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">${payload.event_name}</p>
+                        <div class="pass-preview">
+                            <img src="${res.pass_url || pass.pass_url}?t=${Date.now()}" alt="QR Pass">
+                            <a href="/pass/download/${res.serial_number || pass.serial_number}" class="download-btn">
+                                <span>📥</span> DOWNLOAD PNG
+                            </a>
+                        </div>
+                    `;
+                    resultDiv.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showNotification(res.message || 'Pass generation failed', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Generate Digital Pass';
+                }
+            } catch (err) {
+                showNotification('Network connection error.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Generate Digital Pass';
+            }
+        });
+
+        // Initialize sync
+        loadEvents();
+    </script>
+</body>
+</html>

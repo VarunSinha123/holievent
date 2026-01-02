@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Admin | Manage Events</title>
+    <!-- Modern Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.75rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+            text-decoration: none;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: var(--shadow); }
+        .btn-secondary { background: white; color: var(--text-main); border-color: var(--border); }
+        .btn-secondary:hover { background: #f1f5f9; }
+        .btn-danger { background: #fee2e2; color: #991b1b; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-success { background: #dcfce7; color: #166534; }
+        .btn-warning { background: #fef3c7; color: #92400e; }
+        .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; }
+
+        /* Card & List */
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 { font-size: 1.25rem; font-weight: 700; }
+
+        .events-list { padding: 1rem; }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+            transform: scale(1.005);
+        }
+
+        .event-info { flex: 1; }
+
+        .event-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .event-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+        }
+
+        .meta-item { display: flex; align-items: center; gap: 6px; }
+
+        .event-actions { display: flex; gap: 8px; }
+
+        /* Badges */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-active { background: #dcfce7; color: #166534; }
+        .badge-inactive { background: #f1f5f9; color: #64748b; }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .modal-body { padding: 2.5rem; }
+        .modal-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h3 { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: #fdfdff;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: white;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* Ticket Types Section */
+        .ticket-section {
+            background: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .ticket-item { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ticket-item input { flex: 1; }
+
+        /* Notifications */
+        #notificationContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .loading-state { text-align: center; padding: 4rem; color: var(--text-muted); }
+        .empty-state { text-align: center; padding: 4rem; }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="brand">
+                <span style="font-size: 1.5rem;">👑</span>
+                <span>ELITE ADMIN</span>
+            </a>
+            <div style="font-weight: 600; color: var(--text-muted); font-size: 0.9rem;">Event Management</div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header-actions">
+            <a href="/admin" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Back to Dashboard
+            </a>
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7v14"/></svg>
+                Create New Event
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Active & Upcoming Events</h2>
+            </div>
+            <div id="eventsList" class="events-list">
+                <div class="loading-state">Fetching event catalog...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Form Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Create New Event</h3>
+                    <button onclick="closeModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem; color: var(--text-muted)">&times;</button>
+                </div>
+                
+                <form id="eventForm">
+                    <div class="form-group">
+                        <label class="form-label">Event Name *</label>
+                        <input type="text" id="eventName" class="form-input" required placeholder="e.g. Annual Tech Summit 2025">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Event Date *</label>
+                            <input type="date" id="eventDate" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizer</label>
+                            <input type="text" id="organizer" class="form-input" placeholder="Organization name">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Start Time *</label>
+                            <input type="time" id="startTime" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">End Time *</label>
+                            <input type="time" id="endTime" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Venue / Location *</label>
+                        <input type="text" id="venue" class="form-input" required placeholder="Grand Ballroom or Virtual Link">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea id="description" class="form-textarea" placeholder="Briefly describe the event..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ticketing Options</label>
+                        <div class="ticket-section" id="ticketTypesList">
+                            <!-- Ticket inputs appended here -->
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" style="width:100%" onclick="addTicketType()">+ Add Ticket Tier</button>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 2rem;">
+                        <button type="button" class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="flex:2">Save Event Details</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body">
+                <h3 id="confirmTitle" style="font-weight: 800; margin-bottom: 0.5rem;">Confirm Action</h3>
+                <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 2rem;">Are you sure you want to proceed?</p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="resolveConfirmAction(false)">Cancel</button>
+                    <button class="btn btn-primary" id="confirmActionBtn" onclick="resolveConfirmAction(true)">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEventId = null;
+        let resolveConfirm;
+
+        /** UI HELPERS **/
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colors = { success: '#10b981', danger: '#ef4444', info: '#6366f1' };
+            note.style.borderLeftColor = colors[type] || colors.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span style="font-weight:500">${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                note.style.transition = 'all 0.3s ease';
+                setTimeout(() => note.remove(), 300);
+            }, 4000);
+        }
+
+        function customConfirm(title, message, isDanger = false) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const btn = document.getElementById('confirmActionBtn');
+            btn.style.backgroundColor = isDanger ? 'var(--danger)' : 'var(--primary)';
+            document.getElementById('confirmModal').classList.add('active');
+            return new Promise(resolve => resolveConfirm = resolve);
+        }
+
+        function resolveConfirmAction(value) {
+            document.getElementById('confirmModal').classList.remove('active');
+            if (resolveConfirm) resolveConfirm(value);
+        }
+
+        /** DATA LOGIC **/
+        async function loadEvents() {
+            const list = document.getElementById('eventsList');
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                if (data.success) displayEvents(data.events);
+                else list.innerHTML = '<div class="empty-state">Failed to fetch events.</div>';
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state">Connection error.</div>';
+            }
+        }
+
+        function displayEvents(events) {
+            const list = document.getElementById('eventsList');
+            if (!events || events.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🗓️</div>
+                        <p style="color: var(--text-muted); font-weight: 500;">No events found in the database.</p>
+                        <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="openCreateModal()">Host your first event</button>
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = events.map(event => `
+                <div class="event-item">
+                    <div class="event-info">
+                        <div class="event-name">${escapeHtml(event.name)}</div>
+                        <div class="event-meta">
+                            <div class="meta-item">📅 ${new Date(event.date).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})}</div>
+                            <div class="meta-item">🕐 ${event.start_time || 'N/A'} - ${event.end_time || 'N/A'}</div>
+                            <div class="meta-item">📍 ${escapeHtml(event.venue)}</div>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <span class="badge ${event.is_active ? 'badge-active' : 'badge-inactive'}">
+                                ${event.is_active ? '● Active' : '○ Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="event-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="editEvent('${event._id.$oid}')">Edit</button>
+                        <button class="btn ${event.is_active ? 'btn-warning' : 'btn-success'} btn-sm" 
+                                onclick="toggleEvent('${event._id.$oid}', ${!event.is_active})">
+                            ${event.is_active ? 'Pause' : 'Resume'}
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="handleDeleteEvent('${event._id.$oid}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /** MODAL & FORM LOGIC **/
+        function openCreateModal() {
+            currentEventId = null;
+            document.getElementById('eventForm').reset();
+            document.getElementById('modalTitle').textContent = 'Create New Event';
+            document.getElementById('ticketTypesList').innerHTML = '';
+            addTicketType(); // Default one row
+            document.getElementById('eventModal').classList.add('active');
+        }
+
+        async function editEvent(eventId) {
+            try {
+                const response = await fetch(`/event/api/get/${eventId}`);
+                const data = await response.json();
+                if (data.success) {
+                    const event = data.event;
+                    currentEventId = eventId;
+                    document.getElementById('eventName').value = event.name || '';
+                    document.getElementById('eventDate').value = event.date || '';
+                    document.getElementById('venue').value = event.venue || '';
+                    document.getElementById('description').value = event.description || '';
+                    document.getElementById('startTime').value = event.start_time || '';
+                    document.getElementById('endTime').value = event.end_time || '';
+                    document.getElementById('organizer').value = event.organizer || '';
+
+                    const ticketsList = document.getElementById('ticketTypesList');
+                    ticketsList.innerHTML = '';
+                    if (event.ticket_types?.length) {
+                        event.ticket_types.forEach(t => addTicketType(t.name, t.price));
+                    } else {
+                        addTicketType();
+                    }
+
+                    document.getElementById('modalTitle').textContent = 'Edit Event Details';
+                    document.getElementById('eventModal').classList.add('active');
+                }
+            } catch (e) { showNotification("Error loading event", "danger"); }
+        }
+
+        function closeModal() {
+            document.getElementById('eventModal').classList.remove('active');
+        }
+
+        function addTicketType(name = '', price = '') {
+            const list = document.getElementById('ticketTypesList');
+            const div = document.createElement('div');
+            div.className = 'ticket-item';
+            div.innerHTML = `
+                <input type="text" placeholder="Tier Name (VIP...)" class="form-input ticket-name" value="${escapeHtml(name)}">
+                <input type="number" placeholder="Price" class="form-input ticket-price" value="${price}" min="0" step="0.01">
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding: 10px">&times;</button>
+            `;
+            list.appendChild(div);
+        }
+
+        document.getElementById('eventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ticketTypes = Array.from(document.querySelectorAll('.ticket-item')).map(div => ({
+                name: div.querySelector('.ticket-name').value.trim(),
+                price: parseFloat(div.querySelector('.ticket-price').value) || 0
+            })).filter(t => t.name);
+
+            const eventData = {
+                name: document.getElementById('eventName').value.trim(),
+                date: document.getElementById('eventDate').value,
+                venue: document.getElementById('venue').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                organizer: document.getElementById('organizer').value.trim(),
+                ticketTypes: ticketTypes
+            };
+
+            const url = currentEventId ? `/event/api/update/${currentEventId}` : '/event/api/create';
+            const method = currentEventId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(eventData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showNotification(currentEventId ? "Event updated" : "Event published", "success");
+                    closeModal();
+                    loadEvents();
+                } else {
+                    showNotification(result.message || "Save failed", "danger");
+                }
+            } catch (error) { showNotification("Network error", "danger"); }
+        });
+
+        async function toggleEvent(eventId, active) {
+            try {
+                const response = await fetch(`/event/api/toggle/${eventId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ active })
+                });
+                if ((await response.json()).success) {
+                    showNotification(active ? "Event resumed" : "Event paused", "success");
+                    loadEvents();
+                }
+            } catch (e) { showNotification("Update failed", "danger"); }
+        }
+
+        async function handleDeleteEvent(eventId) {
+            const confirmed = await customConfirm("Delete Event", "Are you sure? This will permanently remove the event and all associated scan data.", true);
+            if (!confirmed) return;
+            try {
+                const response = await fetch(`/event/api/delete/${eventId}`, { method: 'DELETE' });
+                if ((await response.json()).success) {
+                    showNotification("Event deleted", "success");
+                    loadEvents();
+                }
+            } catch (e) { showNotification("Delete failed", "danger"); }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadEvents);
+    </script>
+</body>
+</html>

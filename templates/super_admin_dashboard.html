@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Console | Elite System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: fixed linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.75rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand h1 {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Reload Button Styling */
+        .btn-reload {
+            padding: 8px 16px;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-reload:hover {
+            background: #eef2ff;
+            border-color: var(--primary);
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            border-radius: 99px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .admin-profile:hover {
+            background: #e2e8f0;
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .profile-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-item:first-child { border-radius: 12px 12px 0 0; }
+        .dropdown-item:last-child { border-radius: 0 0 12px 12px; }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+        .stat-icon { font-size: 1.5rem; margin-bottom: 0.75rem; display: block; }
+        .stat-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin: 0.25rem 0; }
+        .stat-subtext { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+        .section-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .action-btn {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .management-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .management-card h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+
+        .management-card p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .btn-manage {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+            cursor: pointer;
+            background: #f8fafc;
+            color: var(--text-main);
+            display: inline-block;
+        }
+
+        .btn-manage:hover { background: #f1f5f9; border-color: var(--secondary); }
+        .btn-manage.success { background: var(--primary); color: white; border: none; }
+        .btn-manage.success:hover { background: var(--primary-dark); }
+        .btn-manage.secondary { color: var(--danger); border-color: rgba(239, 68, 68, 0.2); background: #fef2f2; }
+        .btn-manage.secondary:hover { background: #fee2e2; }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--background);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .error-box {
+            background: #fef2f2;
+            color: var(--danger);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #fee2e2;
+            margin: 2rem 0;
+            font-weight: 600;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-body { padding: 2rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .form-input:focus, .form-select:focus { outline: 2px solid var(--primary); border-color: transparent; }
+
+        .alert { padding: 12px; border-radius: 8px; margin-bottom: 1rem; font-size: 0.875rem; }
+        .alert-error { background: #fee2e2; color: #991b1b; }
+        .alert-success { background: #dcfce7; color: #166534; }
+
+        #notificationContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            padding: 4px;
+        }
+
+        .toggle-password:hover { color: var(--text-main); }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <div id="loading" class="loading-overlay">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">⚡</div>
+        Initializing Super Admin Console...
+    </div>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="brand">
+                <h1><span>⚡</span> Super Admin</h1>
+                <p>System Intelligence & Global Control</p>
+            </div>
+            <div class="user-menu">
+                <!-- Reload Button Added -->
+                <button class="btn-reload" id="reloadBtn" onclick="handleReload()">
+                    <span>↻</span> Reload
+                </button>
+                
+                <div class="admin-profile" onclick="toggleProfileDropdown()">
+                    <div class="avatar-circle" id="adminAvatar">S</div>
+                    <span id="adminName">Loading...</span>
+                    <span style="font-size: 0.7rem;">▼</span>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-item" onclick="showChangePasswordModal(); event.stopPropagation();">
+                            <span>🔑</span> Change Password
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" style="color: var(--danger);" onclick="handleLogout(event); event.stopPropagation();">
+                            <span>🚪</span> Sign Out
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" id="content" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="totalUsers">0</div>
+                <div class="stat-subtext"><span id="newUsers" style="color:var(--success)">0</span> new today</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">📅</span>
+                <div class="stat-label">Events</div>
+                <div class="stat-value" id="totalEvents">0</div>
+                <div class="stat-subtext"><span id="activeEvents">0</span> currently active</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">🎫</span>
+                <div class="stat-label">Total Passes</div>
+                <div class="stat-value" id="totalPasses">0</div>
+                <div class="stat-subtext"><span id="scannedPasses">0</span> check-ins</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">👑</span>
+                <div class="stat-label">System Admins</div>
+                <div class="stat-value" id="totalAdmins">0</div>
+                <div class="stat-subtext">Elevated accounts</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">🛂</span>
+                <div class="stat-label">Security Staff</div>
+                <div class="stat-value" id="totalBouncers">0</div>
+                <div class="stat-subtext"><span id="activeAssignments">0</span> on duty</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">📊</span>
+                <div class="stat-label">Attendance</div>
+                <div class="stat-value" id="scanRate">0%</div>
+                <div class="stat-subtext">Global check-in rate</div>
+            </div>
+        </div>
+
+        <h2 class="section-title">⚡ High-Priority Actions</h2>
+        <div class="actions-grid">
+            <a href="/event" class="action-btn"><span>🎉</span> Create Event</a>
+            <a href="/pass/generate" class="action-btn"><span>🎫</span> Generate Pass</a>
+            <a href="/scan" class="action-btn"><span>📱</span> Scan Pass</a>
+        </div>
+
+        <h2 class="section-title">⚙️ System Modules</h2>
+        <div class="management-grid">
+            <div class="management-card">
+                <h3><span>🎉</span> Event Control</h3>
+                <p>Global management of event lifecycles, pricing structures, and ticket inventory.</p>
+                <div class="btn-group">
+                    <a href="/event" class="btn-manage success">Create New Event</a>
+                    <a href="/event" class="btn-manage">Browse Catalog</a>
+                    <button onclick="handleToggleAllEvents('deactivate')" class="btn-manage secondary">Emergency Kill Switch (All)</button>
+                </div>
+            </div>
+
+            <div class="management-card">
+                <h3><span>👑</span> Admin Hierarchy</h3>
+                <p>Delegate authority. Manage sub-admin permissions and review audit logs.</p>
+                <div class="btn-group">
+                    <a href="/super-admin/create-admin" class="btn-manage success">Onboard Admin</a>
+                    <a href="/super-admin/admins" class="btn-manage">Manage Roles</a>
+                    <a href="/super-admin/audit-logs" class="btn-manage">View System Logs</a>
+                </div>
+            </div>
+
+            <div class="management-card">
+                <h3><span>🛂</span> Security Operations</h3>
+                <p>Manage on-site check-in staff and monitor real-time entry scanning flow.</p>
+                <div class="btn-group">
+                    <button onclick="showCreateBouncerModal()" class="btn-manage success">Deploy New Staff</button>
+                    <a href="/super-admin/bouncer" class="btn-manage">Roster Management</a>
+                    <a href="/scan" class="btn-manage">Live Scan Feed</a>
+                </div>
+            </div>
+
+            <div class="management-card">
+                <h3><span>🎫</span> Pass Management</h3>
+                <p>Digital asset control. Bulk generate QR codes and verify pass validity.</p>
+                <div class="btn-group">
+                    <a href="/pass/generate" class="btn-manage success">Single Pass Gen</a>
+                    <a href="/pass/view" class="btn-manage">Inventory Registry</a>
+                    <a href="/super-admin/bulk-qr" class="btn-manage">Batch Processing</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">🔑 Change Password</h3>
+                    <button onclick="closeChangePasswordModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                </div>
+                <div id="passwordModalAlert"></div>
+                <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div class="form-group">
+                        <label class="form-label">Current Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="currentPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('currentPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="newPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword', this)">👁️</button>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Minimum 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmNewPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmNewPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-manage success" id="changePasswordBtn" style="padding: 12px; font-weight: 700; cursor: pointer;">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deploy Staff Modal -->
+    <div id="createBouncerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">Deploy New Security Staff</h3>
+                    <button onclick="closeBouncerModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                </div>
+                <div id="modalAlert"></div>
+                <form id="createBouncerForm" onsubmit="handleCreateBouncer(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="bouncerName" class="form-input" placeholder="e.g. Robert Smith" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="bouncerEmail" class="form-input" placeholder="robert@security.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" id="bouncerPhone" class="form-input" placeholder="10-digit mobile" required pattern="[0-9]{10}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Set Password *</label>
+                        <input type="password" id="bouncerPassword" class="form-input" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" id="bouncerPasswordConfirm" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Primary Duty Assignment *</label>
+                        <select id="eventSelect" class="form-select" required>
+                            <option value="" disabled selected>-- Select Event Assignment --</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-manage success" id="submitBouncerBtn" style="padding: 12px; font-weight: 700; cursor: pointer;">
+                        Finalize Deployment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body">
+                <h3 id="confirmTitle" style="margin-bottom: 0.5rem; font-weight: 700;">Confirm Action</h3>
+                <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 1.5rem;">Are you sure you want to proceed?</p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn" style="background: #f1f5f9; color: var(--text-main)" onclick="resolveConfirmAction(false)">Cancel</button>
+                    <button class="btn btn-primary" id="confirmActionBtn" onclick="resolveConfirmAction(true)">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Notification System
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            
+            const colorMap = {
+                'success': '#10b981',
+                'danger': '#ef4444',
+                'info': '#6366f1',
+                'warning': '#f59e0b'
+            };
+            note.style.borderLeftColor = colorMap[type] || colorMap.info;
+            
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 4000);
+        }
+
+        // Custom Confirmation Dialog
+        let resolveConfirm;
+        function customConfirm(title, message, btnClass = 'btn-primary') {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const btn = document.getElementById('confirmActionBtn');
+            btn.className = `btn ${btnClass}`;
+            
+            document.getElementById('confirmModal').classList.add('active');
+            
+            return new Promise((resolve) => {
+                resolveConfirm = resolve;
+            });
+        }
+
+        function resolveConfirmAction(value) {
+            document.getElementById('confirmModal').classList.remove('active');
+            if (resolveConfirm) {
+                resolveConfirm(value);
+                resolveConfirm = null;
+            }
+        }
+
+        // Profile Menu Logic
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        document.addEventListener('click', (e) => {
+            const profile = document.querySelector('.admin-profile');
+            const dropdown = document.getElementById('profileDropdown');
+            if (profile && !profile.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Reload Logic
+        function handleReload() {
+            const btn = document.getElementById('reloadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Syncing...';
+            window.location.reload();
+        }
+
+        // Form Helpers
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('active');
+            document.getElementById('passwordModalAlert').innerHTML = '';
+            document.getElementById('changePasswordForm').reset();
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('active');
+        }
+
+        // Logic Functions
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            const alertDiv = document.getElementById('passwordModalAlert');
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (newPassword !== confirmNewPassword) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ New passwords do not match</div>`;
+                return;
+            }
+
+            const submitBtn = document.getElementById('changePasswordBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating Password...';
+            
+            try {
+                const response = await fetch('/super-admin/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: currentPassword, new_password: newPassword })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alertDiv.innerHTML = `<div class="alert alert-success">✅ Password updated successfully!</div>`;
+                    showNotification("Password changed successfully.", "success");
+                    setTimeout(() => {
+                        closeChangePasswordModal();
+                        handleLogout(null, true); 
+                    }, 1500);
+                } else {
+                    alertDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message || 'Update failed'}</div>`;
+                }
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Network error occurred.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Password';
+            }
+        }
+
+        async function handleLogout(event, skipConfirm = false) {
+            if (event) event.stopPropagation();
+
+            if (!skipConfirm) {
+                const confirmed = await customConfirm(
+                    "System Logout", 
+                    "Terminate your secure super-admin session?", 
+                    "btn-danger"
+                );
+                if (!confirmed) return;
+            }
+
+            const adminNameEl = document.getElementById('adminName');
+            adminNameEl.textContent = "Signing out...";
+            document.getElementById('profileDropdown').classList.remove('active');
+
+            try {
+                await fetch('/auth/api/logout', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error) {
+                console.warn("Server logout request failed, proceeding with local cleanup.");
+            } finally {
+                sessionStorage.clear();
+                localStorage.clear();
+                showNotification("Securely signed out. Redirecting...", "success");
+                setTimeout(() => {
+                    window.location.replace('/auth/login?logout=success&t=' + Date.now());
+                }, 800);
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                const response = await fetch('/auth/api/profile');
+                const data = await response.json();
+                if (data.success) {
+                    const name = data.user.name || "Super Admin";
+                    document.getElementById('adminName').textContent = name;
+                    document.getElementById('adminAvatar').textContent = name.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                document.getElementById('adminName').textContent = "System User";
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/super-admin/api/system-stats');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const s = data.stats;
+                    document.getElementById('totalUsers').textContent = s.users?.total || 0;
+                    document.getElementById('newUsers').textContent = s.activity?.new_users || 0;
+                    document.getElementById('totalEvents').textContent = s.events?.total || 0;
+                    document.getElementById('activeEvents').textContent = s.events?.active || 0;
+                    document.getElementById('totalPasses').textContent = s.passes?.total || 0;
+                    document.getElementById('scannedPasses').textContent = s.passes?.scanned || 0;
+                    document.getElementById('totalAdmins').textContent = s.users?.admins || 0;
+                    document.getElementById('totalBouncers').textContent = s.bouncers?.total_bouncers || 0;
+                    document.getElementById('activeAssignments').textContent = s.bouncers?.active_assignments || 0;
+                    
+                    const scanRate = s.passes?.total > 0 
+                        ? ((s.passes?.scanned / s.passes?.total) * 100).toFixed(1)
+                        : 0;
+                    document.getElementById('scanRate').textContent = scanRate + '%';
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('content').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error-box">Connection Error: Failed to fetch system intelligence.</div>`;
+            }
+        }
+
+        async function handleToggleAllEvents(action) {
+            const confirmed = await customConfirm("Global Control", `Are you sure you want to ${action} all events?`, "btn-danger");
+            if (!confirmed) return;
+            
+            try {
+                const res = await fetch('/super-admin/api/event/global-control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action + '_all' })
+                });
+                const data = await res.json();
+                showNotification(data.message || "Operation complete", data.success ? "success" : "danger");
+                if (data.success) loadStats();
+            } catch (err) {
+                showNotification("Network failure", "danger");
+            }
+        }
+
+        async function showCreateBouncerModal() {
+            document.getElementById('createBouncerModal').classList.add('active');
+            document.getElementById('modalAlert').innerHTML = '';
+            document.getElementById('createBouncerForm').reset();
+            
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                const eventSelect = document.getElementById('eventSelect');
+                eventSelect.innerHTML = '<option value="" disabled selected>-- Select Event Assignment --</option>';
+                if (data.success && data.events) {
+                    data.events.forEach(ev => {
+                        eventSelect.innerHTML += `<option value="${ev._id}">${ev.name}</option>`;
+                    });
+                }
+            } catch (error) { console.warn('Events load error'); }
+        }
+
+        function closeBouncerModal() {
+            document.getElementById('createBouncerModal').classList.remove('active');
+        }
+
+        async function handleCreateBouncer(event) {
+            event.preventDefault();
+            const alertDiv = document.getElementById('modalAlert');
+            const submitBtn = document.getElementById('submitBouncerBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            try {
+                const response = await fetch('/bouncer/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('bouncerName').value.trim(),
+                        email: document.getElementById('bouncerEmail').value.trim(),
+                        phone: document.getElementById('bouncerPhone').value.trim(),
+                        password: document.getElementById('bouncerPassword').value,
+                        event_id: document.getElementById('eventSelect').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification("Security staff deployed successfully", "success");
+                    closeBouncerModal();
+                    loadStats();
+                } else {
+                    alertDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Network error.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Finalize Deployment';
+            }
+        }
+
+        async function handleDeleteBouncer(id) {
+            const confirmed = await customConfirm(
+                "Remove Staff Member", 
+                "This will permanently delete this staff account and all associated scan records. This action cannot be undone.", 
+                "btn-danger"
+            );
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/bouncer/api/delete/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification("Staff member removed successfully", "success");
+                    loadStats();
+                } else {
+                    showNotification(data.message || "Failed to remove staff member", "danger");
+                }
+            } catch (error) {
+                showNotification("Network error occurred: " + error.message, "danger");
+            }
+        }
+
+        window.onload = () => {
+            loadProfile();
+            loadStats();
+        };
+    </script>
+</body>
+</html>

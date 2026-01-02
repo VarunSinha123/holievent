@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard | Elite Event System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 0.75rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand h2 {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--primary);
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 12px;
+            background: #f1f5f9;
+            border-radius: 99px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid transparent;
+        }
+
+        .btn-reload {
+            color: var(--primary);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-reload:hover {
+            background: #eef2ff;
+            border-color: var(--primary);
+        }
+
+        .btn-logout {
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-logout:hover {
+            background: #fef2f2;
+            border-color: var(--danger);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 6px;
+            border-radius: 12px;
+            width: fit-content;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .event-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+        .event-image {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .event-info { padding: 1.5rem; }
+        .event-name { font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; }
+        .event-details { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.25rem; display: flex; align-items: center; gap: 8px; }
+
+        .ticket-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .ticket-price { font-weight: 800; color: var(--primary); font-size: 1.125rem; }
+
+        .btn-buy {
+            padding: 6px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-buy:hover:not(:disabled) { background: var(--primary-dark); transform: scale(1.05); }
+        .btn-buy:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-close { font-size: 1.5rem; cursor: pointer; border: none; background: none; color: var(--text-muted); }
+        .modal-body { padding: 1.5rem; }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.875rem; }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        #notificationContainer {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .notification {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div id="notificationContainer"></div>
+
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="brand">
+                <h2><span>🎫</span> ELITE SYSTEM</h2>
+            </div>
+            <div class="user-info">
+                <button class="btn-action btn-reload" id="reloadBtn" onclick="handleReload()">
+                    <span>↻</span> Reload
+                </button>
+                <div class="user-profile-badge">
+                    <span id="userName">Loading...</span>
+                </div>
+                <button class="btn-action btn-logout" id="logoutBtn" onclick="handleLogout()">Sign Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" id="tab-events" onclick="switchTab('events')">Browse Events</button>
+            <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')">My Orders</button>
+            <button class="tab-btn" id="tab-profile" onclick="switchTab('profile')">Profile</button>
+        </div>
+
+        <div id="eventsTab" class="tab-content active">
+            <div class="card">
+                <h2>Featured Events</h2>
+                <div id="eventsGrid" class="events-grid">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">Syncing with live catalog...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="ordersTab" class="tab-content">
+            <div class="card">
+                <h2>My Digital Passes</h2>
+                <div id="ordersList">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-muted);">Fetching your purchase history...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileTab" class="tab-content">
+            <div class="card">
+                <h2>Account Settings</h2>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="profileEmail" disabled style="background: #f1f5f9;">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="profileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="profilePhone">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: auto; padding: 12px 30px;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-body">
+                <h3 id="confirmTitle" style="margin-bottom: 0.5rem; font-weight: 700;">Confirm Action</h3>
+                <p id="confirmMessage" style="color: var(--text-muted); margin-bottom: 1.5rem;">Are you sure you want to proceed?</p>
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button class="btn-action" style="color: var(--text-main); border-color: var(--border)" onclick="resolveConfirmAction(false)">Cancel</button>
+                    <button class="btn-buy" id="confirmActionBtn" onclick="resolveConfirmAction(true)">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const note = document.createElement('div');
+            note.className = 'notification';
+            const colorMap = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1', 'warning': '#f59e0b' };
+            note.style.borderLeftColor = colorMap[type] || colorMap.info;
+            const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
+            note.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            container.appendChild(note);
+            setTimeout(() => {
+                note.style.opacity = '0';
+                note.style.transform = 'translateX(20px)';
+                setTimeout(() => note.remove(), 300);
+            }, 4000);
+        }
+
+        let resolveConfirm;
+        function customConfirm(title, message, btnClass = 'btn-primary') {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            const btn = document.getElementById('confirmActionBtn');
+            btn.className = `btn-buy ${btnClass}`;
+            document.getElementById('confirmModal').classList.add('active');
+            return new Promise((resolve) => { resolveConfirm = resolve; });
+        }
+
+        function resolveConfirmAction(value) {
+            document.getElementById('confirmModal').classList.remove('active');
+            if (resolveConfirm) { resolveConfirm(value); resolveConfirm = null; }
+        }
+
+        let currentUser = null;
+        let allEvents = [];
+
+        async function loadUserProfile() {
+            try {
+                const response = await fetch('/auth/api/profile');
+                const data = await response.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    document.getElementById('userName').textContent = currentUser.name;
+                    document.getElementById('profileEmail').value = currentUser.email;
+                    document.getElementById('profileName').value = currentUser.name;
+                    document.getElementById('profilePhone').value = currentUser.phone || '';
+                }
+            } catch (e) { console.error('Profile load error'); }
+        }
+
+        function handleReload() {
+            const btn = document.getElementById('reloadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Syncing...';
+            window.location.reload();
+        }
+
+        async function handleLogout() {
+            const confirmed = await customConfirm("Sign Out", "Are you sure you want to end your session?", "btn-logout");
+            if (!confirmed) return;
+            const btn = document.getElementById('logoutBtn');
+            btn.disabled = true;
+            btn.textContent = "Closing...";
+            try {
+                await fetch('/auth/api/logout', { method: 'POST' });
+                window.location.replace('/auth/login');
+            } catch (error) { window.location.replace('/auth/login'); }
+        }
+
+        async function loadEvents() {
+            const grid = document.getElementById('eventsGrid');
+            try {
+                const response = await fetch('/event/api/public/events');
+                const data = await response.json();
+                if (data.success && data.events.length > 0) {
+                    allEvents = data.events;
+                    grid.innerHTML = '';
+                    data.events.forEach(event => grid.appendChild(createEventCard(event)));
+                } else {
+                    grid.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">No active events at the moment.</div>';
+                }
+            } catch (e) { grid.innerHTML = '<div style="color: var(--danger);">Failed to sync catalog.</div>'; }
+        }
+
+        function createEventCard(event) {
+            const card = document.createElement('div');
+            card.className = 'event-card';
+            let ticketsHtml = '';
+            if (event.ticket_types) {
+                event.ticket_types.forEach(ticket => {
+                    if (ticket.is_active) {
+                        const avail = ticket.total_available - (ticket.tickets_sold || 0);
+                        ticketsHtml += `
+                            <div class="ticket-option">
+                                <div>
+                                    <div style="font-weight: 700;">${ticket.name}</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">${avail} left</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="ticket-price">₹${ticket.price}</div>
+                                    <button class="btn-buy" ${avail <= 0 ? 'disabled' : ''}>
+                                        ${avail <= 0 ? 'Sold Out' : 'Get Pass'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+            card.innerHTML = `
+                <div class="event-image">🎉</div>
+                <div class="event-info">
+                    <div class="event-name">${event.name}</div>
+                    <div class="event-details">📅 ${event.date}</div>
+                    <div class="event-details">📍 ${event.venue}</div>
+                    ${ticketsHtml || '<div style="margin-top: 1rem; color: var(--text-muted);">Bookings closed.</div>'}
+                </div>
+            `;
+            return card;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`${tab}Tab`).classList.add('active');
+            if (tab === 'events') loadEvents();
+        }
+
+        window.onload = () => {
+            loadUserProfile();
+            loadEvents();
+        };
+    </script>
+</body>
+</html>
