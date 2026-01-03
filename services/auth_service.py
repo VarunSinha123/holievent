@@ -1,16 +1,21 @@
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 from services.database import db
 from models.user import User
 from bson.objectid import ObjectId
 import re
 
+# =========================
+# BRUTE FORCE PROTECTION SETTINGS
+# =========================
+MAX_FAILED_ATTEMPTS = 5
+BLOCK_DURATION = timedelta(minutes=10)
+
 class AuthService:
-    """Service for user authentication and management"""
+    """Service for user authentication and management with brute force protection"""
     
     def __init__(self):
         """Initialize auth service"""
-        # Removed automatic admin/super_admin creation as requested
         pass
     
     def validate_email(self, email):
@@ -59,15 +64,19 @@ class AuthService:
             # Hash password using scrypt
             hashed_password = generate_password_hash(password, method='scrypt')
             
-            # Create user document
+            # Create user document with security fields
             user_data = {
                 "email": email,
                 "password": hashed_password,
                 "name": name.strip(),
                 "phone": phone.strip() if phone else "",
                 "role": role,
-                "created_at": datetime.now(),
-                "is_active": True
+                "created_at": datetime.utcnow(),
+                "is_active": True,
+                
+                # 🔐 Brute force protection fields
+                "failed_login_attempts": 0,
+                "login_block_until": None
             }
             
             result = db.users.insert_one(user_data)
@@ -91,7 +100,7 @@ class AuthService:
     
     def login_user(self, email, password, expected_role=None):
         """
-        Authenticate user and verify role
+        Authenticate user with brute force protection
         
         Args:
             email (str): User's email
@@ -125,13 +134,47 @@ class AuthService:
                     "message": "Account is disabled. Contact administrator."
                 }
             
+            # 🔒 CHECK IF ACCOUNT IS LOCKED DUE TO FAILED ATTEMPTS
+            block_until = user_data.get("login_block_until")
+            if block_until and datetime.utcnow() < block_until:
+                remaining_minutes = int((block_until - datetime.utcnow()).total_seconds() / 60) + 1
+                print(f"🚫 Account locked: {email} - {remaining_minutes} minutes remaining")
+                return {
+                    "success": False,
+                    "message": f"Account temporarily locked due to multiple failed login attempts. Try again in {remaining_minutes} minute(s)."
+                }
+            
             # Verify hashed password
             if not check_password_hash(user_data['password'], password):
                 print(f"❌ Invalid password for: {email}")
-                return {
-                    "success": False,
-                    "message": "Invalid email or password"
-                }
+                
+                # ❌ INCREMENT FAILED ATTEMPTS
+                failed_attempts = user_data.get("failed_login_attempts", 0) + 1
+                
+                update_data = {"failed_login_attempts": failed_attempts}
+                
+                # Lock account if max attempts reached
+                if failed_attempts >= MAX_FAILED_ATTEMPTS:
+                    update_data["login_block_until"] = datetime.utcnow() + BLOCK_DURATION
+                    print(f"🚫 Account locked: {email} - Too many failed attempts")
+                
+                db.users.update_one(
+                    {"_id": user_data["_id"]},
+                    {"$set": update_data}
+                )
+                
+                # Inform user about remaining attempts
+                remaining_attempts = MAX_FAILED_ATTEMPTS - failed_attempts
+                if remaining_attempts > 0:
+                    return {
+                        "success": False,
+                        "message": f"Invalid email or password. {remaining_attempts} attempt(s) remaining before account lock."
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"Account locked due to multiple failed attempts. Try again in {int(BLOCK_DURATION.total_seconds() / 60)} minutes."
+                    }
             
             user_role = user_data.get('role', 'user')
             
@@ -143,10 +186,14 @@ class AuthService:
                     "message": f"Invalid credentials for {expected_role} login. Your account is registered as {user_role}."
                 }
             
-            # Update last login timestamp
+            # ✅ SUCCESSFUL LOGIN - RESET SECURITY COUNTERS
             db.users.update_one(
-                {"_id": user_data['_id']},
-                {"$set": {"last_login": datetime.now()}}
+                {"_id": user_data["_id"]},
+                {"$set": {
+                    "failed_login_attempts": 0,
+                    "login_block_until": None,
+                    "last_login": datetime.utcnow()
+                }}
             )
             
             print(f"✅ Login successful: {email} as {user_role}")
@@ -166,6 +213,29 @@ class AuthService:
                 "success": False,
                 "message": "Login failed. Please try again."
             }
+    
+    def unlock_user_account(self, user_id):
+        """
+        Manually unlock a user account (Admin tool)
+        
+        Args:
+            user_id (str): User's MongoDB ObjectId
+        
+        Returns:
+            bool: Success status
+        """
+        try:
+            result = db.users.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {
+                    "failed_login_attempts": 0,
+                    "login_block_until": None
+                }}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"Error unlocking account: {e}")
+            return False
     
     def get_user_by_id(self, user_id):
         """
@@ -278,7 +348,7 @@ class AuthService:
                 {"_id": ObjectId(user_id)},
                 {"$set": {
                     "password": new_hash,
-                    "password_changed_at": datetime.now()
+                    "password_changed_at": datetime.utcnow()
                 }}
             )
             
