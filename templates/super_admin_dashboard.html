@@ -560,6 +560,16 @@
                     <a href="/super-admin/bulk-qr" class="btn-manage">Batch Processing</a>
                 </div>
             </div>
+
+            <!-- New Account Security Card -->
+            <div class="management-card">
+                <h3><span>🔓</span> Account Security</h3>
+                <p>Unlock user accounts that have been locked due to multiple failed login attempts.</p>
+                <div class="btn-group">
+                    <a href="/super-admin/admins" class="btn-manage">View All Users</a>
+                    <button onclick="showNotification('Navigate to User Management page to view and unlock locked accounts', 'info')" class="btn-manage">Account Controls</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -971,6 +981,32 @@
                     loadStats();
                 } else {
                     showNotification(data.message || "Failed to remove staff member", "danger");
+                }
+            } catch (error) {
+                showNotification("Network error occurred: " + error.message, "danger");
+            }
+        }
+
+        // Handle Unlocking accounts
+        async function handleUnlockAccount(userId, userName) {
+            const confirmed = await customConfirm(
+                "Unlock Account", 
+                `Reset login attempts and unlock account for ${userName}?`, 
+                "btn-primary"
+            );
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/super-admin/api/user/${userId}/unlock`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`Account unlocked for ${userName}`, "success");
+                } else {
+                    showNotification(data.message || "Failed to unlock account", "danger");
                 }
             } catch (error) {
                 showNotification("Network error occurred: " + error.message, "danger");
