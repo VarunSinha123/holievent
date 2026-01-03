@@ -80,7 +80,6 @@
             gap: 12px;
         }
 
-        /* Reload Button Styling */
         .btn-reload {
             padding: 8px 16px;
             background: transparent;
@@ -427,6 +426,19 @@
         }
 
         .toggle-password:hover { color: var(--text-main); }
+
+        .locked-user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .locked-user-info h4 { font-size: 0.9rem; font-weight: 700; margin: 0; }
+        .locked-user-info p { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
     </style>
 </head>
 <body>
@@ -444,7 +456,6 @@
                 <p>System Intelligence & Global Control</p>
             </div>
             <div class="user-menu">
-                <!-- Reload Button Added -->
                 <button class="btn-reload" id="reloadBtn" onclick="handleReload()">
                     <span>↻</span> Reload
                 </button>
@@ -475,6 +486,14 @@
                 <div class="stat-value" id="totalUsers">0</div>
                 <div class="stat-subtext"><span id="newUsers" style="color:var(--success)">0</span> new today</div>
             </div>
+
+            <!-- New Locked Accounts Stat -->
+            <div class="stat-card" id="lockedStatCard" style="border-color: var(--border); transition: border-color 0.3s;">
+                <span class="stat-icon">🔐</span>
+                <div class="stat-label" id="lockedStatLabel">Locked Accounts</div>
+                <div class="stat-value" id="lockedAccountsCount">0</div>
+                <div class="stat-subtext">Security status</div>
+            </div>
             
             <div class="stat-card">
                 <span class="stat-icon">📅</span>
@@ -502,13 +521,6 @@
                 <div class="stat-label">Security Staff</div>
                 <div class="stat-value" id="totalBouncers">0</div>
                 <div class="stat-subtext"><span id="activeAssignments">0</span> on duty</div>
-            </div>
-            
-            <div class="stat-card">
-                <span class="stat-icon">📊</span>
-                <div class="stat-label">Attendance</div>
-                <div class="stat-value" id="scanRate">0%</div>
-                <div class="stat-subtext">Global check-in rate</div>
             </div>
         </div>
 
@@ -552,22 +564,26 @@
             </div>
 
             <div class="management-card">
-                <h3><span>🎫</span> Pass Management</h3>
-                <p>Digital asset control. Bulk generate QR codes and verify pass validity.</p>
-                <div class="btn-group">
-                    <a href="/pass/generate" class="btn-manage success">Single Pass Gen</a>
-                    <a href="/pass/view" class="btn-manage">Inventory Registry</a>
-                    <a href="/super-admin/bulk-qr" class="btn-manage">Batch Processing</a>
-                </div>
-            </div>
-
-            <!-- New Account Security Card -->
-            <div class="management-card">
                 <h3><span>🔓</span> Account Security</h3>
                 <p>Unlock user accounts that have been locked due to multiple failed login attempts.</p>
                 <div class="btn-group">
                     <a href="/super-admin/admins" class="btn-manage">View All Users</a>
-                    <button onclick="showNotification('Navigate to User Management page to view and unlock locked accounts', 'info')" class="btn-manage">Account Controls</button>
+                    <button onclick="showLockedAccountsModal()" class="btn-manage success">Manage Locked Accounts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Locked Accounts Modal -->
+    <div id="lockedAccountsModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-body">
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">🔐 Locked User Accounts</h3>
+                    <button onclick="closeLockedAccountsModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                </div>
+                <div id="lockedAccountsList">
+                    <p style="text-align:center; color:var(--text-muted); padding: 2rem;">Loading locked accounts...</p>
                 </div>
             </div>
         </div>
@@ -862,19 +878,27 @@
                 if (data.success) {
                     const s = data.stats;
                     document.getElementById('totalUsers').textContent = s.users?.total || 0;
-                    document.getElementById('newUsers').textContent = s.activity?.new_users || 0;
                     document.getElementById('totalEvents').textContent = s.events?.total || 0;
                     document.getElementById('activeEvents').textContent = s.events?.active || 0;
                     document.getElementById('totalPasses').textContent = s.passes?.total || 0;
                     document.getElementById('scannedPasses').textContent = s.passes?.scanned || 0;
                     document.getElementById('totalAdmins').textContent = s.users?.admins || 0;
                     document.getElementById('totalBouncers').textContent = s.bouncers?.total_bouncers || 0;
-                    document.getElementById('activeAssignments').textContent = s.bouncers?.active_assignments || 0;
                     
-                    const scanRate = s.passes?.total > 0 
-                        ? ((s.passes?.scanned / s.passes?.total) * 100).toFixed(1)
-                        : 0;
-                    document.getElementById('scanRate').textContent = scanRate + '%';
+                    // Handle Locked Count
+                    const lockedCount = s.users?.locked || 0;
+                    const lockedCountEl = document.getElementById('lockedAccountsCount');
+                    lockedCountEl.textContent = lockedCount;
+                    
+                    const statCard = document.getElementById('lockedStatCard');
+                    const statLabel = document.getElementById('lockedStatLabel');
+                    if (lockedCount > 0) {
+                        statCard.style.borderColor = 'var(--danger)';
+                        statLabel.style.color = 'var(--danger)';
+                    } else {
+                        statCard.style.borderColor = 'var(--border)';
+                        statLabel.style.color = 'var(--text-muted)';
+                    }
                     
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('content').style.display = 'block';
@@ -882,6 +906,84 @@
             } catch (error) {
                 document.getElementById('loading').innerHTML = 
                     `<div class="error-box">Connection Error: Failed to fetch system intelligence.</div>`;
+            }
+        }
+
+        // Locked Accounts Management
+        function closeLockedAccountsModal() {
+            document.getElementById('lockedAccountsModal').classList.remove('active');
+        }
+
+        async function showLockedAccountsModal() {
+            const modal = document.getElementById('lockedAccountsModal');
+            const listContainer = document.getElementById('lockedAccountsList');
+            modal.classList.add('active');
+            listContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Searching for locked accounts...</p>';
+
+            try {
+                // Hypothetical endpoint to list only locked accounts
+                const response = await fetch('/super-admin/api/users/locked');
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.users.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align:center; padding: 2rem;">
+                                <div style="font-size: 2rem; margin-bottom: 1rem;">✅</div>
+                                <p style="font-weight: 600;">No locked accounts found.</p>
+                                <p style="font-size: 0.8rem; color: var(--text-muted);">System is running securely.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    listContainer.innerHTML = '';
+                    data.users.forEach(user => {
+                        const item = document.createElement('div');
+                        item.className = 'locked-user-item';
+                        item.innerHTML = `
+                            <div class="locked-user-info">
+                                <h4>${user.name}</h4>
+                                <p>${user.email}</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="handleUnlockAccount('${user._id}', '${user.name.replace(/'/g, "\\'")}')">
+                                🔓 Unlock
+                            </button>
+                        `;
+                        listContainer.appendChild(item);
+                    });
+                } else {
+                    listContainer.innerHTML = `<p style="color:var(--danger); text-align:center; padding: 2rem;">Error: ${data.message}</p>`;
+                }
+            } catch (error) {
+                listContainer.innerHTML = '<p style="color:var(--danger); text-align:center; padding: 2rem;">Failed to connect to security service.</p>';
+            }
+        }
+
+        async function handleUnlockAccount(userId, userName) {
+            const confirmed = await customConfirm(
+                "Unlock Account", 
+                `Reset login attempts and unlock account for ${userName}?`, 
+                "btn-primary"
+            );
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/super-admin/api/user/${userId}/unlock`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification(`Account unlocked for ${userName}`, "success");
+                    // Refresh modal view
+                    showLockedAccountsModal();
+                    loadStats();
+                } else {
+                    showNotification(data.message || "Failed to unlock account", "danger");
+                }
+            } catch (error) {
+                showNotification("Network error occurred: " + error.message, "danger");
             }
         }
 
@@ -958,58 +1060,6 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Finalize Deployment';
-            }
-        }
-
-        async function handleDeleteBouncer(id) {
-            const confirmed = await customConfirm(
-                "Remove Staff Member", 
-                "This will permanently delete this staff account and all associated scan records. This action cannot be undone.", 
-                "btn-danger"
-            );
-            if (!confirmed) return;
-
-            try {
-                const response = await fetch(`/bouncer/api/delete/${id}`, { 
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    showNotification("Staff member removed successfully", "success");
-                    loadStats();
-                } else {
-                    showNotification(data.message || "Failed to remove staff member", "danger");
-                }
-            } catch (error) {
-                showNotification("Network error occurred: " + error.message, "danger");
-            }
-        }
-
-        // Handle Unlocking accounts
-        async function handleUnlockAccount(userId, userName) {
-            const confirmed = await customConfirm(
-                "Unlock Account", 
-                `Reset login attempts and unlock account for ${userName}?`, 
-                "btn-primary"
-            );
-            if (!confirmed) return;
-
-            try {
-                const response = await fetch(`/super-admin/api/user/${userId}/unlock`, { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    showNotification(`Account unlocked for ${userName}`, "success");
-                } else {
-                    showNotification(data.message || "Failed to unlock account", "danger");
-                }
-            } catch (error) {
-                showNotification("Network error occurred: " + error.message, "danger");
             }
         }
 
