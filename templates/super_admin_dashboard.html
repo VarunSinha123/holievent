@@ -80,6 +80,7 @@
             gap: 12px;
         }
 
+        /* Reload Button Styling */
         .btn-reload {
             padding: 8px 16px;
             background: transparent;
@@ -192,12 +193,10 @@
             border-radius: 20px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
-            transition: all 0.2s;
+            transition: transform 0.2s;
         }
 
         .stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
-        .stat-card.clickable { cursor: pointer; }
-        .stat-card.clickable:active { transform: scale(0.98); }
 
         .stat-icon { font-size: 1.5rem; margin-bottom: 0.75rem; display: block; }
         .stat-label { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -428,25 +427,6 @@
         }
 
         .toggle-password:hover { color: var(--text-main); }
-
-        .locked-user-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: #f8fafc;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
-        .locked-user-info h4 { font-size: 0.9rem; font-weight: 700; margin: 0; }
-        .locked-user-info p { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
-        
-        .search-results {
-            margin-top: 1.5rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
     </style>
 </head>
 <body>
@@ -464,6 +444,7 @@
                 <p>System Intelligence & Global Control</p>
             </div>
             <div class="user-menu">
+                <!-- Reload Button Added -->
                 <button class="btn-reload" id="reloadBtn" onclick="handleReload()">
                     <span>↻</span> Reload
                 </button>
@@ -494,13 +475,6 @@
                 <div class="stat-value" id="totalUsers">0</div>
                 <div class="stat-subtext"><span id="newUsers" style="color:var(--success)">0</span> new today</div>
             </div>
-
-            <div class="stat-card clickable" id="lockedStatCard" onclick="showLockedAccountsModal()">
-                <span class="stat-icon">🔐</span>
-                <div class="stat-label" id="lockedStatLabel">Locked Accounts</div>
-                <div class="stat-value" id="lockedAccountsCount">0</div>
-                <div class="stat-subtext">Security status</div>
-            </div>
             
             <div class="stat-card">
                 <span class="stat-icon">📅</span>
@@ -528,6 +502,13 @@
                 <div class="stat-label">Security Staff</div>
                 <div class="stat-value" id="totalBouncers">0</div>
                 <div class="stat-subtext"><span id="activeAssignments">0</span> on duty</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-icon">📊</span>
+                <div class="stat-label">Attendance</div>
+                <div class="stat-value" id="scanRate">0%</div>
+                <div class="stat-subtext">Global check-in rate</div>
             </div>
         </div>
 
@@ -571,47 +552,97 @@
             </div>
 
             <div class="management-card">
-                <h3><span>🔓</span> Account Security</h3>
-                <p>Manage system access. Unlock accounts locked by failed logins or manually block suspicious users.</p>
+                <h3><span>🎫</span> Pass Management</h3>
+                <p>Digital asset control. Bulk generate QR codes and verify pass validity.</p>
                 <div class="btn-group">
-                    <button onclick="showUserSearchModal()" class="btn-manage">Search & Block User</button>
-                    <button onclick="showLockedAccountsModal()" class="btn-manage success">Manage Locked Accounts</button>
+                    <a href="/pass/generate" class="btn-manage success">Single Pass Gen</a>
+                    <a href="/pass/view" class="btn-manage">Inventory Registry</a>
+                    <a href="/super-admin/bulk-qr" class="btn-manage">Batch Processing</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- User Search Modal -->
-    <div id="userSearchModal" class="modal">
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
         <div class="modal-content">
             <div class="modal-body">
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="font-weight: 700; font-size: 1.25rem;">🔍 User Security Lookup</h3>
-                    <button onclick="closeUserSearchModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">🔑 Change Password</h3>
+                    <button onclick="closeChangePasswordModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Search by Email or User ID</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="userSearchInput" class="form-input" placeholder="user@example.com or 65f... ">
-                        <button class="btn btn-primary" onclick="handleUserSearch()">Search</button>
+                <div id="passwordModalAlert"></div>
+                <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                    <div class="form-group">
+                        <label class="form-label">Current Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="currentPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('currentPassword', this)">👁️</button>
+                        </div>
                     </div>
-                </div>
-                <div id="searchResultContainer" class="search-results"></div>
+                    <div class="form-group">
+                        <label class="form-label">New Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="newPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword', this)">👁️</button>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">Minimum 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password *</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmNewPassword" class="form-input" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmNewPassword', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-manage success" id="changePasswordBtn" style="padding: 12px; font-weight: 700; cursor: pointer;">
+                        Update Password
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- Locked Accounts Modal -->
-    <div id="lockedAccountsModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+    <!-- Deploy Staff Modal -->
+    <div id="createBouncerModal" class="modal">
+        <div class="modal-content">
             <div class="modal-body">
                 <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                    <h3 style="font-weight: 700; font-size: 1.25rem;">🔐 Locked User Accounts</h3>
-                    <button onclick="closeLockedAccountsModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
+                    <h3 style="font-weight: 700; font-size: 1.25rem;">Deploy New Security Staff</h3>
+                    <button onclick="closeBouncerModal()" style="background:none; border:none; cursor:pointer; font-size: 1.5rem;">&times;</button>
                 </div>
-                <div id="lockedAccountsList">
-                    <p style="text-align:center; color:var(--text-muted); padding: 2rem;">Loading locked accounts...</p>
-                </div>
+                <div id="modalAlert"></div>
+                <form id="createBouncerForm" onsubmit="handleCreateBouncer(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" id="bouncerName" class="form-input" placeholder="e.g. Robert Smith" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address *</label>
+                        <input type="email" id="bouncerEmail" class="form-input" placeholder="robert@security.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" id="bouncerPhone" class="form-input" placeholder="10-digit mobile" required pattern="[0-9]{10}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Set Password *</label>
+                        <input type="password" id="bouncerPassword" class="form-input" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password *</label>
+                        <input type="password" id="bouncerPasswordConfirm" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Primary Duty Assignment *</label>
+                        <select id="eventSelect" class="form-select" required>
+                            <option value="" disabled selected>-- Select Event Assignment --</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-manage success" id="submitBouncerBtn" style="padding: 12px; font-weight: 700; cursor: pointer;">
+                        Finalize Deployment
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -630,18 +661,24 @@
         </div>
     </div>
 
-    <!-- Change Password & Bouncer Modals Omitted for Brevity -->
-
     <script>
         // Notification System
         function showNotification(message, type = 'info') {
             const container = document.getElementById('notificationContainer');
             const note = document.createElement('div');
             note.className = 'notification';
-            const colorMap = { 'success': '#10b981', 'danger': '#ef4444', 'info': '#6366f1', 'warning': '#f59e0b' };
+            
+            const colorMap = {
+                'success': '#10b981',
+                'danger': '#ef4444',
+                'info': '#6366f1',
+                'warning': '#f59e0b'
+            };
             note.style.borderLeftColor = colorMap[type] || colorMap.info;
+            
             const icon = type === 'success' ? '✅' : type === 'danger' ? '❌' : 'ℹ️';
             note.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            
             container.appendChild(note);
             setTimeout(() => {
                 note.style.opacity = '0';
@@ -657,167 +694,293 @@
             document.getElementById('confirmMessage').textContent = message;
             const btn = document.getElementById('confirmActionBtn');
             btn.className = `btn ${btnClass}`;
+            
             document.getElementById('confirmModal').classList.add('active');
-            return new Promise((resolve) => { resolveConfirm = resolve; });
+            
+            return new Promise((resolve) => {
+                resolveConfirm = resolve;
+            });
         }
+
         function resolveConfirmAction(value) {
             document.getElementById('confirmModal').classList.remove('active');
-            if (resolveConfirm) { resolveConfirm(value); resolveConfirm = null; }
-        }
-
-        // Profile & Reload Logic
-        function toggleProfileDropdown() { document.getElementById('profileDropdown').classList.toggle('active'); }
-        function handleReload() { window.location.reload(); }
-
-        // Security - Search & Block User
-        function showUserSearchModal() {
-            document.getElementById('userSearchModal').classList.add('active');
-            document.getElementById('searchResultContainer').innerHTML = '';
-            document.getElementById('userSearchInput').value = '';
-        }
-        function closeUserSearchModal() { document.getElementById('userSearchModal').classList.remove('active'); }
-
-        async function handleUserSearch() {
-            const query = document.getElementById('userSearchInput').value.trim();
-            const container = document.getElementById('searchResultContainer');
-            if (!query) return showNotification("Please enter a search term", "warning");
-
-            container.innerHTML = '<p style="text-align:center; padding: 1rem;">Searching database...</p>';
-
-            try {
-                const response = await fetch(`/super-admin/api/users/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (data.success && data.users.length > 0) {
-                    container.innerHTML = '';
-                    data.users.forEach(user => {
-                        const isLocked = user.isLocked || user.loginAttempts >= 5;
-                        const card = document.createElement('div');
-                        card.className = 'locked-user-item';
-                        card.innerHTML = `
-                            <div class="locked-user-info">
-                                <h4>${user.name} ${isLocked ? '🔒' : '✅'}</h4>
-                                <p>${user.email}</p>
-                            </div>
-                            <button class="btn ${isLocked ? 'btn-primary' : 'btn-danger'}" 
-                                onclick="handleToggleAccountStatus('${user._id}', '${user.name.replace(/'/g, "\\'")}', ${isLocked})">
-                                ${isLocked ? '🔓 Unlock' : '🚫 Block'}
-                            </button>
-                        `;
-                        container.appendChild(card);
-                    });
-                } else {
-                    container.innerHTML = '<p style="text-align:center; padding: 1rem; color: var(--text-muted);">No user matches found.</p>';
-                }
-            } catch (err) {
-                container.innerHTML = '<p style="text-align:center; padding: 1rem; color: var(--danger);">Search failed. Network error.</p>';
+            if (resolveConfirm) {
+                resolveConfirm(value);
+                resolveConfirm = null;
             }
         }
 
-        async function handleToggleAccountStatus(userId, userName, currentIsLocked) {
-            const action = currentIsLocked ? 'Unlock' : 'Block';
-            const confirmed = await customConfirm(
-                `${action} Account`, 
-                `Are you sure you want to ${action.toLowerCase()} account for ${userName}?`, 
-                currentIsLocked ? "btn-primary" : "btn-danger"
-            );
-            if (!confirmed) return;
+        // Profile Menu Logic
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profileDropdown');
+            dropdown.classList.toggle('active');
+        }
 
+        document.addEventListener('click', (e) => {
+            const profile = document.querySelector('.admin-profile');
+            const dropdown = document.getElementById('profileDropdown');
+            if (profile && !profile.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Reload Logic
+        function handleReload() {
+            const btn = document.getElementById('reloadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳</span> Syncing...';
+            window.location.reload();
+        }
+
+        // Form Helpers
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+
+        function showChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('active');
+            document.getElementById('passwordModalAlert').innerHTML = '';
+            document.getElementById('changePasswordForm').reset();
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('active');
+        }
+
+        // Logic Functions
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            const alertDiv = document.getElementById('passwordModalAlert');
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            if (newPassword !== confirmNewPassword) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ New passwords do not match</div>`;
+                return;
+            }
+
+            const submitBtn = document.getElementById('changePasswordBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating Password...';
+            
             try {
-                const endpoint = currentIsLocked ? `/super-admin/api/user/${userId}/unlock` : `/super-admin/api/user/${userId}/block`;
-                const response = await fetch(endpoint, { method: 'POST' });
-                const data = await response.json();
+                const response = await fetch('/super-admin/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: currentPassword, new_password: newPassword })
+                });
                 
+                const data = await response.json();
                 if (data.success) {
-                    showNotification(`${userName} has been ${action.toLowerCase()}ed.`, "success");
-                    handleUserSearch(); // Refresh search results
-                    loadStats(); // Update dashboard counts
+                    alertDiv.innerHTML = `<div class="alert alert-success">✅ Password updated successfully!</div>`;
+                    showNotification("Password changed successfully.", "success");
+                    setTimeout(() => {
+                        closeChangePasswordModal();
+                        handleLogout(null, true); 
+                    }, 1500);
                 } else {
-                    showNotification(data.message || "Action failed", "danger");
+                    alertDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message || 'Update failed'}</div>`;
                 }
             } catch (error) {
-                showNotification("Error: " + error.message, "danger");
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Network error occurred.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Password';
             }
         }
 
-        // Security - Locked Accounts Modal
-        function closeLockedAccountsModal() { document.getElementById('lockedAccountsModal').classList.remove('active'); }
-        async function showLockedAccountsModal() {
-            const modal = document.getElementById('lockedAccountsModal');
-            const listContainer = document.getElementById('lockedAccountsList');
-            modal.classList.add('active');
-            listContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Loading locked accounts...</p>';
+        async function handleLogout(event, skipConfirm = false) {
+            if (event) event.stopPropagation();
+
+            if (!skipConfirm) {
+                const confirmed = await customConfirm(
+                    "System Logout", 
+                    "Terminate your secure super-admin session?", 
+                    "btn-danger"
+                );
+                if (!confirmed) return;
+            }
+
+            const adminNameEl = document.getElementById('adminName');
+            adminNameEl.textContent = "Signing out...";
+            document.getElementById('profileDropdown').classList.remove('active');
 
             try {
-                const response = await fetch('/super-admin/api/users/locked');
-                const data = await response.json();
-                if (data.success) {
-                    if (data.users.length === 0) {
-                        listContainer.innerHTML = '<div style="text-align:center; padding: 2rem;"><p>No locked accounts found.</p></div>';
-                        return;
-                    }
-                    listContainer.innerHTML = '';
-                    data.users.forEach(user => {
-                        const item = document.createElement('div');
-                        item.className = 'locked-user-item';
-                        item.innerHTML = `
-                            <div class="locked-user-info"><h4>${user.name}</h4><p>${user.email}</p></div>
-                            <button class="btn btn-primary" onclick="handleUnlockDirect('${user._id}', '${user.name.replace(/'/g, "\\'")}')">🔓 Unlock</button>
-                        `;
-                        listContainer.appendChild(item);
-                    });
-                } else {
-                    listContainer.innerHTML = `<p style="color:var(--danger); text-align:center;">Error: ${data.message}</p>`;
-                }
-            } catch (error) { listContainer.innerHTML = '<p style="color:var(--danger); text-align:center;">Network Error.</p>'; }
+                await fetch('/auth/api/logout', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch (error) {
+                console.warn("Server logout request failed, proceeding with local cleanup.");
+            } finally {
+                sessionStorage.clear();
+                localStorage.clear();
+                showNotification("Securely signed out. Redirecting...", "success");
+                setTimeout(() => {
+                    window.location.replace('/auth/login?logout=success&t=' + Date.now());
+                }, 800);
+            }
         }
 
-        async function handleUnlockDirect(id, name) {
-            const confirmed = await customConfirm("Unlock Account", `Reset attempts for ${name}?`);
-            if (!confirmed) return;
-            try {
-                const res = await fetch(`/super-admin/api/user/${id}/unlock`, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) { showNotification("Unlocked", "success"); showLockedAccountsModal(); loadStats(); }
-            } catch (err) { showNotification("Failed", "danger"); }
-        }
-
-        // Loaders
         async function loadProfile() {
             try {
-                const res = await fetch('/auth/api/profile');
-                const data = await res.json();
+                const response = await fetch('/auth/api/profile');
+                const data = await response.json();
                 if (data.success) {
-                    document.getElementById('adminName').textContent = data.user.name;
-                    document.getElementById('adminAvatar').textContent = data.user.name.charAt(0).toUpperCase();
+                    const name = data.user.name || "Super Admin";
+                    document.getElementById('adminName').textContent = name;
+                    document.getElementById('adminAvatar').textContent = name.charAt(0).toUpperCase();
                 }
-            } catch (e) {}
+            } catch (error) {
+                document.getElementById('adminName').textContent = "System User";
+            }
         }
 
         async function loadStats() {
             try {
-                const res = await fetch('/super-admin/api/system-stats');
-                const data = await res.json();
+                const response = await fetch('/super-admin/api/system-stats');
+                const data = await response.json();
+                
                 if (data.success) {
                     const s = data.stats;
                     document.getElementById('totalUsers').textContent = s.users?.total || 0;
+                    document.getElementById('newUsers').textContent = s.activity?.new_users || 0;
                     document.getElementById('totalEvents').textContent = s.events?.total || 0;
+                    document.getElementById('activeEvents').textContent = s.events?.active || 0;
                     document.getElementById('totalPasses').textContent = s.passes?.total || 0;
+                    document.getElementById('scannedPasses').textContent = s.passes?.scanned || 0;
                     document.getElementById('totalAdmins').textContent = s.users?.admins || 0;
                     document.getElementById('totalBouncers').textContent = s.bouncers?.total_bouncers || 0;
+                    document.getElementById('activeAssignments').textContent = s.bouncers?.active_assignments || 0;
                     
-                    const lockedCount = s.users?.locked || 0;
-                    document.getElementById('lockedAccountsCount').textContent = lockedCount;
-                    const card = document.getElementById('lockedStatCard');
-                    card.style.borderColor = lockedCount > 0 ? 'var(--danger)' : 'var(--border)';
+                    const scanRate = s.passes?.total > 0 
+                        ? ((s.passes?.scanned / s.passes?.total) * 100).toFixed(1)
+                        : 0;
+                    document.getElementById('scanRate').textContent = scanRate + '%';
                     
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('content').style.display = 'block';
                 }
-            } catch (e) { document.getElementById('loading').innerHTML = '<p>Error loading stats.</p>'; }
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error-box">Connection Error: Failed to fetch system intelligence.</div>`;
+            }
         }
 
-        window.onload = () => { loadProfile(); loadStats(); };
+        async function handleToggleAllEvents(action) {
+            const confirmed = await customConfirm("Global Control", `Are you sure you want to ${action} all events?`, "btn-danger");
+            if (!confirmed) return;
+            
+            try {
+                const res = await fetch('/super-admin/api/event/global-control', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action + '_all' })
+                });
+                const data = await res.json();
+                showNotification(data.message || "Operation complete", data.success ? "success" : "danger");
+                if (data.success) loadStats();
+            } catch (err) {
+                showNotification("Network failure", "danger");
+            }
+        }
+
+        async function showCreateBouncerModal() {
+            document.getElementById('createBouncerModal').classList.add('active');
+            document.getElementById('modalAlert').innerHTML = '';
+            document.getElementById('createBouncerForm').reset();
+            
+            try {
+                const response = await fetch('/event/api/list');
+                const data = await response.json();
+                const eventSelect = document.getElementById('eventSelect');
+                eventSelect.innerHTML = '<option value="" disabled selected>-- Select Event Assignment --</option>';
+                if (data.success && data.events) {
+                    data.events.forEach(ev => {
+                        eventSelect.innerHTML += `<option value="${ev._id}">${ev.name}</option>`;
+                    });
+                }
+            } catch (error) { console.warn('Events load error'); }
+        }
+
+        function closeBouncerModal() {
+            document.getElementById('createBouncerModal').classList.remove('active');
+        }
+
+        async function handleCreateBouncer(event) {
+            event.preventDefault();
+            const alertDiv = document.getElementById('modalAlert');
+            const submitBtn = document.getElementById('submitBouncerBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            try {
+                const response = await fetch('/bouncer/api/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('bouncerName').value.trim(),
+                        email: document.getElementById('bouncerEmail').value.trim(),
+                        phone: document.getElementById('bouncerPhone').value.trim(),
+                        password: document.getElementById('bouncerPassword').value,
+                        event_id: document.getElementById('eventSelect').value
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification("Security staff deployed successfully", "success");
+                    closeBouncerModal();
+                    loadStats();
+                } else {
+                    alertDiv.innerHTML = `<div class="alert alert-error">❌ ${data.message}</div>`;
+                }
+            } catch (error) {
+                alertDiv.innerHTML = `<div class="alert alert-error">❌ Network error.</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Finalize Deployment';
+            }
+        }
+
+        async function handleDeleteBouncer(id) {
+            const confirmed = await customConfirm(
+                "Remove Staff Member", 
+                "This will permanently delete this staff account and all associated scan records. This action cannot be undone.", 
+                "btn-danger"
+            );
+            if (!confirmed) return;
+
+            try {
+                const response = await fetch(`/bouncer/api/delete/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification("Staff member removed successfully", "success");
+                    loadStats();
+                } else {
+                    showNotification(data.message || "Failed to remove staff member", "danger");
+                }
+            } catch (error) {
+                showNotification("Network error occurred: " + error.message, "danger");
+            }
+        }
+
+        window.onload = () => {
+            loadProfile();
+            loadStats();
+        };
     </script>
 </body>
 </html>
