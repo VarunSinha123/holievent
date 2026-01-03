@@ -271,7 +271,7 @@ def get_users():
                     .limit(per_page))
         
         for user in users:
-            user['order_count'] = db.orders.count_documents({"user_id": user['_id']})
+            user['order_count'] = db.orders.count_documents({"user_id": user['_id']}) if 'orders' in db.list_collection_names() else 0
             user['pass_count'] = db.passes.count_documents({"user_id": user['_id']})
         
         total = db.users.count_documents(query)
@@ -322,6 +322,63 @@ def toggle_user_status(user_id):
         
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
+# ============================================================================
+# 🔓 NEW: UNLOCK USER ACCOUNT ENDPOINT
+# ============================================================================
+
+@super_admin_bp.route('/api/user/<user_id>/unlock', methods=['POST'])
+@super_admin_required
+def unlock_user_account(user_id):
+    """Manually unlock a user account that's been locked due to failed login attempts"""
+    try:
+        # Get user info before unlocking
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return jsonify({
+                "success": False,
+                "message": "User not found"
+            }), 404
+        
+        # Check if user is actually locked
+        block_until = user.get("login_block_until")
+        is_locked = block_until and datetime.utcnow() < block_until
+        
+        # Unlock the account using auth_service
+        success = auth_service.unlock_user_account(user_id)
+        
+        if success:
+            # Log the unlock action
+            audit_service.log(
+                action_type="account_unlocked",
+                performed_by=current_user.id,
+                details=f"Account unlocked for user '{user.get('name')}' ({user.get('email')}) - Failed attempts reset",
+                target_user=user_id
+            )
+            
+            return jsonify({
+                "success": True,
+                "message": f"Account unlocked successfully for {user.get('name')}",
+                "was_locked": is_locked
+            })
+        
+        return jsonify({
+            "success": False,
+            "message": "Failed to unlock account"
+        }), 400
+        
+    except Exception as e:
+        print(f"Error unlocking account: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+# ============================================================================
+# CONTINUE WITH REMAINING ENDPOINTS...
+# ============================================================================
 
 @super_admin_bp.route('/api/user/<user_id>/delete', methods=['DELETE'])
 @super_admin_required
