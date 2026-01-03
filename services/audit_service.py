@@ -33,12 +33,19 @@ class AuditService:
             if target_user:
                 log_entry["target_user"] = ObjectId(target_user)
             
-            # Enrich with user details
+            # Enrich with user details for the performer
             if performed_by:
                 user = db.users.find_one({"_id": ObjectId(performed_by)}, {"name": 1, "email": 1})
                 if user:
                     log_entry["performed_by_name"] = user.get("name", "Unknown")
                     log_entry["performed_by_email"] = user.get("email", "")
+            
+            # Enrich with target user details
+            if target_user:
+                target = db.users.find_one({"_id": ObjectId(target_user)}, {"name": 1, "email": 1})
+                if target:
+                    log_entry["target_user_name"] = target.get("name", "Unknown")
+                    log_entry["target_user_email"] = target.get("email", "")
             
             db.audit_logs.insert_one(log_entry)
             return True
@@ -56,6 +63,28 @@ class AuditService:
     def log_system_action(action_type, details, metadata=None):
         """Convenience method for system actions"""
         return AuditService.log(action_type, None, details, metadata=metadata)
+    
+    @staticmethod
+    def log_account_locked(email, user_id=None):
+        """Log when an account gets locked due to failed login attempts"""
+        return AuditService.log(
+            action_type="account_locked",
+            performed_by=None,  # System action
+            details=f"Account locked due to multiple failed login attempts: {email}",
+            target_user=user_id,
+            metadata={"email": email, "reason": "brute_force_protection"}
+        )
+    
+    @staticmethod
+    def log_account_unlocked(email, unlocked_by, user_id=None):
+        """Log when an account is manually unlocked"""
+        return AuditService.log(
+            action_type="account_unlocked",
+            performed_by=unlocked_by,
+            details=f"Account manually unlocked: {email}",
+            target_user=user_id,
+            metadata={"email": email}
+        )
     
     @staticmethod
     def get_logs(action_type=None, user_id=None, start_date=None, end_date=None, limit=50):
@@ -85,6 +114,32 @@ class AuditService:
                    .limit(limit))
         
         return logs
+    
+    @staticmethod
+    def get_locked_accounts():
+        """
+        Get all currently locked accounts
+        
+        Returns:
+            list: List of user documents that are currently locked
+        """
+        try:
+            now = datetime.now()
+            locked_users = list(db.users.find({
+                "login_block_until": {"$gte": now}
+            }, {
+                "email": 1,
+                "name": 1,
+                "login_block_until": 1,
+                "failed_login_attempts": 1,
+                "role": 1
+            }).sort("login_block_until", -1))
+            
+            return locked_users
+            
+        except Exception as e:
+            print(f"Error fetching locked accounts: {e}")
+            return []
 
 # Create singleton instance
 audit_service = AuditService()
