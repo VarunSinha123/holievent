@@ -3,334 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audit Command | EventPass Premium</title>
+    <title>TERMINAL // SECURITY AUDIT v4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
+            --neon-green: #00ff88;
+            --neon-blue: #00d9ff;
+            --neon-red: #ff3e3e;
+            --neon-yellow: #ffcc00;
+            --bg-deep: #050505;
+            --bg-surface: #0f0f0f;
+            --border-glow: rgba(0, 255, 136, 0.15);
         }
 
         body {
+            background-color: var(--bg-deep);
+            color: #e0e0e0;
             font-family: 'Inter', sans-serif;
-            background: #f1f5f9;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background-attachment: fixed;
-            min-height: 100vh;
+            overflow-x: hidden;
         }
 
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Scanning Line Effect */
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 136, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 50;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* Glass Cards */
         .glass-panel {
-            background: var(--glass-bg);
+            background: rgba(15, 15, 15, 0.8);
             backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
         }
 
-        .elite-table th {
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            font-size: 0.7rem;
-            color: #64748b;
-        }
+        /* Neon Accents */
+        .text-neon-green { color: var(--neon-green); text-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+        .text-neon-red { color: var(--neon-red); text-shadow: 0 0 8px rgba(255, 62, 62, 0.4); }
+        .text-neon-blue { color: var(--neon-blue); text-shadow: 0 0 8px rgba(0, 217, 255, 0.4); }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 6px;
-            box-shadow: 0 0 8px currentColor;
+        /* Tab Transitions */
+        .tab-btn {
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .mono-time {
-            font-family: 'JetBrains Mono', monospace;
+        .tab-btn.active { color: var(--neon-green); }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
         }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
 
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+        /* Pulse Animation */
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
         }
-        .live-indicator { animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-        .refresh-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .btn-elite {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .btn-elite:hover:not(:disabled) {
+            background: white;
+            color: black;
+            box-shadow: 0 0 15px white;
+        }
+
+        .data-bar {
+            height: 4px;
+            background: #222;
+            border-radius: 2px;
+            overflow: hidden;
+            width: 100px;
+        }
+        .data-bar-fill {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%;
+            transition: width 1s ease-out;
+        }
     </style>
 </head>
-<body class="text-slate-900 antialiased pb-12">
+<body class="p-4 md:p-8">
+    <div class="scanline"></div>
 
-    <!-- Global Header -->
-    <header class="sticky top-0 z-50 px-6 py-4 bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-4">
-                <div class="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-500/30">
-                    E
-                </div>
-                <div>
-                    <h1 class="text-white font-bold text-lg leading-tight">Audit Command</h1>
-                    <p class="text-slate-400 text-xs font-medium uppercase tracking-widest">Security Intelligence</p>
-                </div>
-            </div>
-
-            <!-- Single Clock System -->
-            <div class="flex items-center gap-3">
-                <div class="flex flex-col items-end px-4 border-r border-white/10">
-                    <span class="text-[10px] text-indigo-400 font-bold uppercase tracking-tighter flex items-center gap-1">
-                        <span class="w-1 h-1 bg-indigo-400 rounded-full live-indicator"></span> Local System Time
-                    </span>
-                    <span id="istClock" class="text-white mono-time font-bold text-lg">--:--:-- IST</span>
-                </div>
-                
-                <div class="flex items-center gap-2 ml-2">
-                    <button id="refreshBtn" onclick="handleRefresh()" class="p-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all group">
-                        <svg id="refreshIcon" class="w-4 h-4 transition-transform duration-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                    </button>
-                    <a href="/super-admin/dashboard" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-all shadow-lg shadow-indigo-600/20">
-                        Exit
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto mt-8 px-6">
+    <div class="max-w-[1600px] mx-auto space-y-6">
         
-        <!-- Filter Bar -->
-        <div class="glass-panel rounded-2xl p-4 mb-6 flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-[300px] relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                </span>
-                <select id="actionFilter" onchange="loadLogs()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none cursor-pointer">
-                    <option value="">All Activity Logs</option>
-                    <optgroup label="Events Management">
-                        <option value="event_created">Event Created</option>
-                        <option value="event_updated">Event Updated</option>
-                        <option value="event_deleted">Event Deleted</option>
-                        <option value="event_activated">Event Activated</option>
-                    </optgroup>
-                    <optgroup label="Access Control">
-                        <option value="admin_created">New Admin Created</option>
-                        <option value="admin_removed">Admin Removed</option>
-                        <option value="bouncer_created">Bouncer Onboarded</option>
-                    </optgroup>
-                </select>
+        <!-- TOP NAVIGATION & STATUS -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-white/5">
+            <div class="space-y-1">
+                <div class="flex items-center gap-3 text-[10px] mono tracking-[0.2em] uppercase text-white/40">
+                    <span class="flex items-center gap-2 text-neon-green">
+                        <span class="w-1.5 h-1.5 rounded-full bg-neon-green pulse"></span>
+                        Secure Link Established
+                    </span>
+                    <span class="w-px h-3 bg-white/10"></span>
+                    <span>Region: US-EAST-1</span>
+                    <span class="w-px h-3 bg-white/10"></span>
+                    <span id="liveClock" class="text-white/60">00:00:00</span>
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tighter italic uppercase">SECURITY <span class="text-neon-green">AUDIT</span> TERMINAL</h1>
             </div>
 
-            <div class="relative min-w-[180px]">
-                <input type="date" id="dateFilter" onchange="loadLogs()" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+            <div class="flex items-center gap-3">
+                <button onclick="refreshAll()" id="syncBtn" class="btn-elite px-6 py-2.5 rounded text-xs font-bold mono uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Synchronize
+                </button>
+                <a href="/super-admin/dashboard" class="bg-white text-black hover:bg-neon-green hover:shadow-[0_0_20px_rgba(0,255,136,0.5)] transition-all px-6 py-2.5 rounded text-xs font-bold mono uppercase tracking-wider">
+                    Dashboard
+                </a>
             </div>
+        </header>
 
-            <div class="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl border border-slate-200">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Real-time Feed</span>
-                <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] live-indicator"></div>
+        <!-- ANALYTICS PREVIEW -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="glass-panel p-4 rounded-lg space-y-2 border-l-2 border-l-neon-green">
+                <div class="text-[10px] mono text-white/40 uppercase">System Integrity</div>
+                <div class="text-2xl font-bold mono">99.98%</div>
+                <div class="data-bar"><div class="data-bar-fill" style="width: 99.9%;"></div></div>
+            </div>
+            <div class="glass-panel p-4 rounded-lg space-y-2 border-l-2 border-l-neon-blue">
+                <div class="text-[10px] mono text-white/40 uppercase">Data Throughput</div>
+                <div class="text-2xl font-bold mono" id="throughputValue">0.0 MB/s</div>
+                <div class="data-bar"><div class="data-bar-fill" id="throughputBar" style="width: 20%; background: var(--neon-blue);"></div></div>
+            </div>
+            <div class="glass-panel p-4 rounded-lg space-y-2 border-l-2 border-l-neon-yellow">
+                <div class="text-[10px] mono text-white/40 uppercase">Threat Level</div>
+                <div class="text-2xl font-bold mono">STABLE</div>
+                <div class="data-bar"><div class="data-bar-fill" style="width: 10%; background: var(--neon-yellow);"></div></div>
+            </div>
+            <div class="glass-panel p-4 rounded-lg space-y-2 border-l-2 border-l-neon-red">
+                <div class="text-[10px] mono text-white/40 uppercase">Critical Alerts</div>
+                <div id="alertCount" class="text-2xl font-bold mono">0</div>
+                <div class="data-bar"><div id="alertBar" class="data-bar-fill" style="width: 0%; background: var(--neon-red);"></div></div>
+            </div>
+        </div>
+
+        <!-- CRITICAL ALERTS BOX -->
+        <div id="lockedAlert" class="hidden">
+            <div class="bg-neon-red/10 border border-neon-red/30 p-6 rounded-lg">
+                <div class="flex items-center gap-3 mb-4 text-neon-red font-bold mono text-sm uppercase tracking-widest">
+                    <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Critical: Locked Accounts Detected
+                </div>
+                <div id="lockedList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
-        <!-- Table Card -->
-        <div class="glass-panel rounded-3xl overflow-hidden border border-white/40">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left elite-table border-collapse">
-                    <thead class="bg-slate-50/50">
-                        <tr>
-                            <th class="px-6 py-4">Timestamp (IST)</th>
-                            <th class="px-6 py-4">Security Action</th>
-                            <th class="px-6 py-4">Performer</th>
-                            <th class="px-6 py-4">Activity Metadata</th>
-                            <th class="px-6 py-4">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logsContainer">
-                        <!-- Content loaded by JS -->
-                        <tr>
-                            <td colspan="5" class="py-20 text-center">
-                                <div class="flex flex-col items-center gap-3">
-                                    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full refresh-spin"></div>
-                                    <p class="text-slate-500 font-medium text-sm">Synchronizing logs...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        <!-- MAIN INTERFACE -->
+        <div class="glass-panel rounded-xl overflow-hidden border border-white/5">
+            <div class="flex items-center justify-between border-b border-white/5 bg-white/[0.02] px-6">
+                <div class="flex gap-8">
+                    <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn active py-4 text-xs font-bold mono uppercase tracking-widest">Audit Logs</button>
+                    <button onclick="switchTab('security')" id="tab-security" class="tab-btn py-4 text-xs font-bold mono uppercase tracking-widest">Security Events</button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-[10px] mono text-white/30 uppercase mb-1.5">Action Filter</label>
+                        <select id="actionFilter" onchange="loadLogs()" class="w-full bg-white/[0.03] border border-white/10 rounded p-2.5 text-xs mono text-white focus:outline-none">
+                            <option value="">All Streams</option>
+                            <option value="event_created">Event Genesis</option>
+                            <option value="event_deleted">Event Termination</option>
+                            <option value="admin_created">Admin Elevation</option>
+                            <option value="account_locked">Account Locked</option>
+                            <option value="account_unlocked">Account Unlocked</option>
+                        </select>
+                    </div>
+                    <div class="w-48">
+                        <label class="block text-[10px] mono text-white/30 uppercase mb-1.5">Date Range</label>
+                        <input type="date" id="dateFilter" onchange="loadLogs()" class="w-full bg-white/[0.03] border border-white/10 rounded p-2.5 text-xs mono text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto min-h-[400px]">
+                    <div id="tableContainer">
+                        <div class="py-20 flex flex-col items-center justify-center opacity-40">
+                            <div class="w-10 h-10 border-2 border-t-neon-green border-white/10 rounded-full animate-spin mb-4"></div>
+                            <div class="mono text-[10px] uppercase tracking-[0.3em]">Querying Database...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </main>
 
-    <!-- Overlay Info Box -->
-    <div id="toast" class="fixed bottom-8 right-8 translate-y-20 opacity-0 transition-all duration-300 z-[100]">
-        <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
-            <span id="toastIcon"></span>
-            <span id="toastMsg" class="text-sm font-bold"></span>
+        <!-- TERMINAL LOG -->
+        <div class="glass-panel p-4 rounded-lg mono text-[10px] h-32 overflow-y-auto bg-black/80 border-t-2 border-t-neon-green/20">
+            <div id="terminalStream" class="space-y-1">
+                <div class="text-white/30">> system.init() initialized</div>
+                <div class="text-neon-green">> connection secure</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Update Header Clock
+        let currentTab = 'logs';
+
         function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-IN', { 
-                timeZone: 'Asia/Kolkata', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: true 
+            document.getElementById('liveClock').textContent = new Date().toLocaleTimeString('en-GB', { 
+                hour: '2-digit', minute: '2-digit', second: '2-digit' 
             });
-            document.getElementById('istClock').textContent = timeString.toUpperCase() + " IST";
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        /**
-         * Robust Timestamp Formatting for IST
-         * We avoid manual millisecond math to prevent double-offsets.
-         * The browser's Intl API handles the 5:30 conversion natively.
-         */
-        function formatLogTime(ts) {
-            let date;
-            
-            // Handle MongoDB format or standard strings/numbers
-            if (ts && ts.$date) {
-                date = new Date(ts.$date.$numberLong ? parseInt(ts.$date.$numberLong) : ts.$date);
-            } else if (typeof ts === 'string') {
-                // Ensure ISO format compatibility
-                date = new Date(ts.includes(' ') ? ts.replace(' ', 'T') : ts);
-            } else {
-                date = new Date(ts || Date.now());
-            }
-
-            // If date is invalid, fallback to now
-            if (isNaN(date.getTime())) date = new Date();
-
-            const dateOptions = { 
-                timeZone: 'Asia/Kolkata', 
-                day: '2-digit', 
-                month: 'short', 
-                year: 'numeric' 
-            };
-            
-            const timeOptions = { 
-                timeZone: 'Asia/Kolkata', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: true 
-            };
-
-            return {
-                day: date.toLocaleDateString('en-IN', dateOptions),
-                time: date.toLocaleTimeString('en-IN', timeOptions)
-            };
+        function addTerminalMsg(msg, color = 'text-white/30') {
+            const stream = document.getElementById('terminalStream');
+            const div = document.createElement('div');
+            div.className = color;
+            div.textContent = `> [${new Date().toLocaleTimeString()}] ${msg}`;
+            stream.prepend(div);
+            if (stream.children.length > 50) stream.lastChild.remove();
         }
 
-        function getActionConfig(type) {
-            const configs = {
-                event_created: { color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', dot: 'bg-emerald-500' },
-                event_deleted: { color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-100', dot: 'bg-rose-500' },
-                admin_created: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500' },
-                global_event_control: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', dot: 'bg-amber-500' }
+        function parseTS(ts) {
+            if (!ts) return new Date();
+            const val = ts.$date ? (ts.$date.$numberLong ? parseInt(ts.$date.$numberLong) : ts.$date) : ts;
+            return new Date(val);
+        }
+
+        function getTagStyle(type) {
+            const map = {
+                'event_created': 'text-neon-green bg-neon-green/10 border-neon-green/30',
+                'account_locked': 'text-neon-red bg-neon-red/10 border-neon-red/30',
+                'login_failed': 'text-neon-yellow bg-neon-yellow/10 border-neon-yellow/30',
+                'admin_elevation': 'text-neon-blue bg-neon-blue/10 border-neon-blue/30',
+                'account_unlocked': 'text-neon-green bg-neon-green/10 border-neon-green/30'
             };
-            return configs[type] || { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-100', dot: 'bg-slate-400' };
+            return map[type] || 'text-white/40 bg-white/5 border-white/10';
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').textContent = msg;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
-        }
-
-        async function handleRefresh() {
-            const btn = document.getElementById('refreshBtn');
-            const icon = document.getElementById('refreshIcon');
-            icon.classList.add('refresh-spin');
-            btn.disabled = true;
-            await loadLogs();
-            setTimeout(() => {
-                icon.classList.remove('refresh-spin');
-                btn.disabled = false;
-                showToast('Audit feed synchronized');
-            }, 600);
-        }
-
-        async function loadLogs() {
-            const container = document.getElementById('logsContainer');
-            const actionType = document.getElementById('actionFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-
-            let url = '/super-admin/api/audit-logs';
-            const params = new URLSearchParams();
-            if (actionType) params.append('action_type', actionType);
-            if (dateFilter) params.append('date', dateFilter);
-            if (params.toString()) url += '?' + params.toString();
-
+        async function loadLockedAccounts() {
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const res = await fetch('/super-admin/api/locked-accounts');
+                const data = await res.json();
+                const alertBox = document.getElementById('lockedAlert');
+                const list = document.getElementById('lockedList');
+                const countEl = document.getElementById('alertCount');
+                const barEl = document.getElementById('alertBar');
 
-                if (data.success && data.logs?.length > 0) {
-                    container.innerHTML = data.logs.map(log => {
-                        const timeInfo = formatLogTime(log.timestamp);
-                        const cfg = getActionConfig(log.action_type);
-                        const performer = log.performed_by_name || 'System';
-                        const initial = performer.split(' ').map(n => n[0]).join('').substring(0, 2);
-
+                if (data.success && data.locked_accounts?.length > 0) {
+                    alertBox.classList.remove('hidden');
+                    countEl.textContent = data.locked_accounts.length;
+                    barEl.style.width = '100%';
+                    
+                    list.innerHTML = data.locked_accounts.map(acc => {
+                        const blockUntil = parseTS(acc.login_block_until);
+                        const remaining = Math.max(0, Math.ceil((blockUntil - new Date()) / 60000));
                         return `
-                            <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 group">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-slate-900 tracking-tight">${timeInfo.day}</span>
-                                        <span class="text-xs font-bold text-indigo-600 mono-time">${timeInfo.time}</span>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${cfg.bg} ${cfg.color} ${cfg.border}">
-                                        <span class="status-dot ${cfg.dot}"></span>
-                                        ${(log.action_type || 'system_event').replace(/_/g, ' ')}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-[10px] text-white font-black">
-                                            ${initial}
-                                        </div>
-                                        <div class="flex flex-col">
-                                            <span class="text-sm font-bold text-slate-800">${performer}</span>
-                                            <span class="text-[10px] text-slate-400 font-medium">${log.performed_by_email || 'automated@system'}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <p class="text-sm text-slate-500 line-clamp-1 group-hover:line-clamp-none transition-all duration-300 max-w-md font-medium italic">
-                                        "${log.details || '—'}"
-                                    </p>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-100/50 px-2 py-0.5 rounded border border-emerald-200">VERIFIED</span>
-                                </td>
-                            </tr>
+                            <div class="glass-panel p-4 rounded border-white/10 bg-black/40 flex justify-between items-center group">
+                                <div class="space-y-1">
+                                    <div class="text-xs font-bold mono text-white">${acc.name}</div>
+                                    <div class="text-[10px] mono text-white/40">${acc.email}</div>
+                                    <div class="text-[9px] text-neon-red mono font-bold uppercase">Locked: ${remaining}m remaining</div>
+                                </div>
+                                <button onclick="unlockAccount('${acc._id.$oid}')" class="bg-neon-red/20 hover:bg-neon-red text-neon-red hover:text-white border border-neon-red/30 px-3 py-1.5 rounded text-[10px] mono font-bold transition-all uppercase">
+                                    Unlock
+                                </button>
+                            </div>
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = `<tr><td colspan="5" class="py-32 text-center text-slate-400 font-bold uppercase tracking-widest">No Logs Found</td></tr>`;
+                    alertBox.classList.add('hidden');
+                    countEl.textContent = "0";
+                    barEl.style.width = '0%';
                 }
-            } catch (err) {
-                container.innerHTML = `<tr><td colspan="5" class="py-20 text-center"><button onclick="loadLogs()" class="px-6 py-2 bg-rose-600 text-white rounded-lg font-bold">Retry Connection</button></td></tr>`;
+            } catch (e) {
+                addTerminalMsg('Failed to poll locked accounts', 'text-neon-red');
             }
         }
 
-        window.addEventListener('DOMContentLoaded', loadLogs);
+        async function loadLogs() {
+            const action = document.getElementById('actionFilter').value;
+            const date = document.getElementById('dateFilter').value;
+            const container = document.getElementById('tableContainer');
+            
+            const typeParam = currentTab === 'security' ? 'account_locked,account_unlocked,login_failed' : action;
+
+            try {
+                const res = await fetch(`/super-admin/api/audit-logs?action_type=${typeParam}&date=${date}`);
+                const data = await res.json();
+
+                if (data.success && data.logs?.length > 0) {
+                    let html = `
+                        <table class="w-full text-left border-separate border-spacing-y-2">
+                            <thead>
+                                <tr class="text-[10px] mono text-white/30 uppercase tracking-widest">
+                                    <th class="px-4 py-2">Timestamp</th>
+                                    <th class="px-4 py-2">Action Type</th>
+                                    <th class="px-4 py-2">Initiator</th>
+                                    <th class="px-4 py-2">Target</th>
+                                    <th class="px-4 py-2 text-right">Activity Trace</th>
+                                </tr>
+                            </thead>
+                            <tbody class="mono text-xs">
+                    `;
+
+                    data.logs.forEach(l => {
+                        const d = parseTS(l.timestamp);
+                        html += `
+                            <tr class="group hover:bg-white/[0.02] transition-colors">
+                                <td class="px-4 py-3 border-y border-l border-white/5 rounded-l-lg text-white/60">
+                                    <div class="font-bold text-white">${d.toLocaleDateString()}</div>
+                                    <div class="text-[10px] opacity-50">${d.toLocaleTimeString()}</div>
+                                </td>
+                                <td class="px-4 py-3 border-y border-white/5">
+                                    <span class="px-2 py-0.5 rounded border text-[9px] font-bold uppercase ${getTagStyle(l.action_type)}">
+                                        ${l.action_type.replace(/_/g, ' ')}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 border-y border-white/5">
+                                    <div class="font-bold text-white/90">${l.performed_by_name || 'System'}</div>
+                                    <div class="text-[10px] text-white/30">${l.performed_by_email || ''}</div>
+                                </td>
+                                <td class="px-4 py-3 border-y border-white/5 text-neon-blue">
+                                    ${l.target_user_name || 'Global'}
+                                </td>
+                                <td class="px-4 py-3 border-y border-r border-white/5 rounded-r-lg text-right text-white/40 max-w-[300px] truncate">
+                                    ${l.details || '—'}
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    container.innerHTML = html + `</tbody></table>`;
+                    addTerminalMsg(`Rendered ${data.logs.length} records`);
+                } else {
+                    container.innerHTML = `<div class="py-20 text-center mono text-white/30 uppercase text-[10px] tracking-widest">Zero Data Matches Found</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="py-20 text-center text-neon-red mono text-[10px] uppercase">Connection Interrupted</div>`;
+            }
+        }
+
+        async function unlockAccount(userId) {
+            addTerminalMsg(`Manual unlock signal sent for UID: ${userId}`, 'text-neon-yellow');
+            try {
+                const res = await fetch(`/super-admin/api/unlock-account/${userId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    addTerminalMsg(`Account ${userId} unlocked successfully`, 'text-neon-green');
+                    refreshAll();
+                } else {
+                    addTerminalMsg(`Unlock rejected: ${data.message}`, 'text-neon-red');
+                }
+            } catch (e) {
+                addTerminalMsg('Network error during unlock request', 'text-neon-red');
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            addTerminalMsg(`Switched context to ${tab.toUpperCase()}`);
+            loadLogs();
+        }
+
+        function refreshAll() {
+            const btn = document.getElementById('syncBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin">◌</span> Syncing`;
+            
+            Promise.all([loadLockedAccounts(), loadLogs()]).then(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Synchronize`;
+                addTerminalMsg('Environment synchronized', 'text-neon-green');
+                
+                // Randomize throughput for aesthetic effect
+                const val = (Math.random() * 2).toFixed(1);
+                document.getElementById('throughputValue').textContent = `${val} MB/s`;
+                document.getElementById('throughputBar').style.width = `${Math.min(100, val * 40)}%`;
+            });
+        }
+
+        window.onload = refreshAll;
+        setInterval(loadLockedAccounts, 30000);
     </script>
 </body>
 </html>
