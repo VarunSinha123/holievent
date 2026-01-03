@@ -269,6 +269,15 @@
             return map[type] || 'text-white/40 bg-white/5 border-white/10';
         }
 
+        function extractId(obj) {
+            // Handle different MongoDB ID formats from json_util
+            if (!obj) return null;
+            if (typeof obj === 'string') return obj;
+            if (obj.$oid) return obj.$oid;
+            if (obj._id) return extractId(obj._id);
+            return null;
+        }
+
         async function loadLockedAccounts() {
             try {
                 const res = await fetch('/super-admin/api/locked-accounts');
@@ -284,6 +293,7 @@
                     barEl.style.width = '100%';
                     
                     list.innerHTML = data.locked_accounts.map(acc => {
+                        const userId = extractId(acc._id);
                         const blockUntil = parseTS(acc.login_block_until);
                         const remaining = Math.max(0, Math.ceil((blockUntil - new Date()) / 60000));
                         return `
@@ -293,7 +303,7 @@
                                     <div class="text-[10px] mono text-white/40">${acc.email}</div>
                                     <div class="text-[9px] text-neon-red mono font-bold uppercase">Locked: ${remaining}m remaining</div>
                                 </div>
-                                <button onclick="unlockAccount('${acc._id.$oid}')" class="bg-neon-red/20 hover:bg-neon-red text-neon-red hover:text-white border border-neon-red/30 px-3 py-1.5 rounded text-[10px] mono font-bold transition-all uppercase">
+                                <button onclick="unlockAccount('${userId}')" class="bg-neon-red/20 hover:bg-neon-red text-neon-red hover:text-white border border-neon-red/30 px-3 py-1.5 rounded text-[10px] mono font-bold transition-all uppercase">
                                     Unlock
                                 </button>
                             </div>
@@ -305,6 +315,7 @@
                     barEl.style.width = '0%';
                 }
             } catch (e) {
+                console.error('Error loading locked accounts:', e);
                 addTerminalMsg('Failed to poll locked accounts', 'text-neon-red');
             }
         }
@@ -367,11 +378,17 @@
                     container.innerHTML = `<div class="py-20 text-center mono text-white/30 uppercase text-[10px] tracking-widest">Zero Data Matches Found</div>`;
                 }
             } catch (e) {
+                console.error('Error loading logs:', e);
                 container.innerHTML = `<div class="py-20 text-center text-neon-red mono text-[10px] uppercase">Connection Interrupted</div>`;
             }
         }
 
         async function unlockAccount(userId) {
+            if (!userId) {
+                addTerminalMsg('Error: Invalid user ID', 'text-neon-red');
+                return;
+            }
+            
             addTerminalMsg(`Manual unlock signal sent for UID: ${userId}`, 'text-neon-yellow');
             try {
                 const res = await fetch(`/super-admin/api/unlock-account/${userId}`, { method: 'POST' });
@@ -383,6 +400,7 @@
                     addTerminalMsg(`Unlock rejected: ${data.message}`, 'text-neon-red');
                 }
             } catch (e) {
+                console.error('Unlock error:', e);
                 addTerminalMsg('Network error during unlock request', 'text-neon-red');
             }
         }
