@@ -356,6 +356,76 @@ def delete_user(user_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 # ============================================================================
+# API ENDPOINTS - ACCOUNT LOCKING/UNLOCKING
+# ============================================================================
+
+@super_admin_bp.route('/api/locked-accounts', methods=['GET'])
+@super_admin_required
+def get_locked_accounts():
+    """Get all currently locked user accounts"""
+    try:
+        now = datetime.utcnow()
+        locked_users = list(db.users.find({
+            "login_block_until": {"$exists": True, "$ne": None, "$gte": now}
+        }, {"password": 0}).sort("login_block_until", -1))
+        
+        locked_json = json.loads(json_util.dumps(locked_users))
+        
+        return jsonify({
+            "success": True,
+            "locked_accounts": locked_json
+        })
+        
+    except Exception as e:
+        print(f"Error getting locked accounts: {e}")
+        return jsonify({
+            "success": False, 
+            "message": str(e)
+        }), 500
+
+@super_admin_bp.route('/api/unlock-account/<user_id>', methods=['POST'])
+@super_admin_required
+def unlock_user_account(user_id):
+    """Manually unlock a user account"""
+    try:
+        # Verify user exists
+        user = db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return jsonify({
+                "success": False, 
+                "message": "User not found"
+            }), 404
+        
+        # Unlock the account using auth service
+        success = auth_service.unlock_user_account(user_id)
+        
+        if success:
+            audit_service.log(
+                action_type="account_unlocked",
+                performed_by=current_user.id,
+                details=f"Account manually unlocked for user '{user.get('name')}' ({user.get('email')})",
+                target_user=user_id
+            )
+            return jsonify({
+                "success": True, 
+                "message": f"Account unlocked successfully for {user.get('name')}"
+            })
+        else:
+            return jsonify({
+                "success": False, 
+                "message": "Failed to unlock account"
+            }), 500
+            
+    except Exception as e:
+        print(f"Error unlocking account: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False, 
+            "message": str(e)
+        }), 500
+
+# ============================================================================
 # API ENDPOINTS - ADMIN MANAGEMENT
 # ============================================================================
 
@@ -588,42 +658,53 @@ def global_event_control():
         return jsonify({"success": False, "message": str(e)}), 500
 
 # ============================================================================
-# API ENDPOINTS - AUDIT LOGS & SECURITY
+# API ENDPOINTS - AUDIT LOGS
 # ============================================================================
 
 @super_admin_bp.route('/api/audit-logs', methods=['GET'])
 @super_admin_required
 def get_audit_logs():
-    """Get system audit logs with enhanced filtering"""
+    """Get system audit logs"""
     try:
         page = int(request.args.get('page', 1))
         per_page = int(request.args.get('per_page', 50))
-        action_type = request.args.get('action_type', '')
-        date_str = request.args.get('date', '')
+        action_type = request.args.get('action_type')
         
         skip = (page - 1) * per_page
         query = {}
-        
-        # Parse date filter
-        if date_str:
-            try:
-                start_date = datetime.strptime(date_str, '%Y-%m-%d')
-                end_date = datetime.combine(start_date.date(), datetime.max.time())
-                query['timestamp'] = {'$gte': start_date, '$lte': end_date}
-            except ValueError:
-                pass
-        
-        # Handle multiple action types (comma-separated)
         if action_type:
-            action_types = [t.strip() for t in action_type.split(',')]
-            if len(action_types) == 1:
-                query['action_type'] = action_types[0]
+            # Handle multiple action types separated by comma
+            if ',' in action_type:
+                action_types = [a.strip() for a in action_type.split(',')]
+                query['action_type'] = {"$in": action_types}
             else:
-                query['action_type'] = {'$in': action_types}
+                query['action_type'] = action_type
         
         logs = list(db.audit_logs.find(query).sort("timestamp", -1).skip(skip).limit(per_page))
-        total = db.audit_logs.count_documents(query)
         
+        for log in logs:
+            if 'performed_by' in log:
+                try:
+                    p_id = ObjectId(log['performed_by']) if isinstance(log['performed_by'], str) else log['performed_by']
+                    user = db.users.find_one({"_id": p_id}, {"password": 0})
+                    if user:
+                        log['performed_by_name'] = user['name']
+                        log['performed_by_email'] = user['email']
+                except:
+                    pass
+            
+            # Add target user details if present
+            if 'target_user' in log:
+                try:
+                    t_id = ObjectId(log['target_user']) if isinstance(log['target_user'], str) else log['target_user']
+                    target = db.users.find_one({"_id": t_id}, {"password": 0})
+                    if target:
+                        log['target_user_name'] = target['name']
+                        log['target_user_email'] = target['email']
+                except:
+                    pass
+        
+        total = db.audit_logs.count_documents(query)
         logs_json = json.loads(json_util.dumps(logs))
         
         return jsonify({
@@ -635,121 +716,8 @@ def get_audit_logs():
         })
         
     except Exception as e:
-        print(f"Error fetching audit logs: {e}")
+        print(f"Error getting audit logs: {e}")
         return jsonify({"success": False, "message": str(e)}), 500
-
-@super_admin_bp.route('/api/locked-accounts', methods=['GET'])
-@super_admin_required
-def get_locked_accounts():
-    """Get all currently locked user accounts"""
-    try:
-        locked_accounts = audit_service.get_locked_accounts()
-        
-        # Convert ObjectId to string for JSON serialization
-        for account in locked_accounts:
-            if '_id' in account:
-                account['_id'] = str(account['_id'])
-        
-        return jsonify({
-            "success": True,
-            "locked_accounts": locked_accounts,
-            "count": len(locked_accounts)
-        })
-        
-    except Exception as e:
-        print(f"Error fetching locked accounts: {e}")
-        return jsonify({
-            "success": False,
-            "message": "Failed to fetch locked accounts"
-        }), 500
-
-@super_admin_bp.route('/api/unlock-account/<user_id>', methods=['POST'])
-@super_admin_required
-def unlock_account(user_id):
-    """Manually unlock a user account"""
-    try:
-        success = auth_service.unlock_user_account(
-            user_id=user_id,
-            unlocked_by=current_user.id
-        )
-        
-        if success:
-            return jsonify({
-                "success": True,
-                "message": "Account unlocked successfully"
-            })
-        else:
-            return jsonify({
-                "success": False,
-                "message": "Failed to unlock account or account not found"
-            }), 404
-            
-    except Exception as e:
-        print(f"Error unlocking account: {e}")
-        return jsonify({
-            "success": False,
-            "message": "Failed to unlock account"
-        }), 500
-
-@super_admin_bp.route('/api/security-stats', methods=['GET'])
-@super_admin_required
-def get_security_stats():
-    """Get security statistics dashboard"""
-    try:
-        now = datetime.utcnow()
-        last_24h = now - timedelta(hours=24)
-        last_7d = now - timedelta(days=7)
-        
-        # Count locked accounts
-        locked_count = db.users.count_documents({
-            "login_block_until": {"$gte": now}
-        })
-        
-        # Count failed logins in last 24h
-        failed_logins_24h = db.audit_logs.count_documents({
-            "action_type": "login_failed",
-            "timestamp": {"$gte": last_24h}
-        })
-        
-        # Count account locks in last 7 days
-        locks_7d = db.audit_logs.count_documents({
-            "action_type": "account_locked",
-            "timestamp": {"$gte": last_7d}
-        })
-        
-        # Get recent security events
-        recent_events = list(db.audit_logs.find({
-            "action_type": {"$in": ["account_locked", "account_unlocked", "login_failed"]},
-            "timestamp": {"$gte": last_24h}
-        }).sort("timestamp", -1).limit(10))
-        
-        # Serialize
-        for event in recent_events:
-            if '_id' in event:
-                event['_id'] = str(event['_id'])
-            if 'performed_by' in event and event['performed_by']:
-                event['performed_by'] = str(event['performed_by'])
-            if 'target_user' in event and event['target_user']:
-                event['target_user'] = str(event['target_user'])
-        
-        recent_events_json = json.loads(json_util.dumps(recent_events))
-        
-        return jsonify({
-            "success": True,
-            "stats": {
-                "locked_accounts": locked_count,
-                "failed_logins_24h": failed_logins_24h,
-                "locks_7d": locks_7d,
-                "recent_events": recent_events_json
-            }
-        })
-        
-    except Exception as e:
-        print(f"Error fetching security stats: {e}")
-        return jsonify({
-            "success": False,
-            "message": "Failed to fetch security stats"
-        }), 500
 
 # ============================================================================
 # PASSWORD MANAGEMENT
