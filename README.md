@@ -8,7 +8,6 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
 [![AWS S3](https://img.shields.io/badge/AWS-S3-FF9900?logo=amazons3&logoColor=white)](https://aws.amazon.com/s3/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Add%20Yours-lightgrey)](#license)
 
 </div>
 
@@ -216,5 +215,3 @@ gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
 ---
 
 ## 📄 License
-
-Add your license of choice here (MIT, Apache 2.0, etc.).
