@@ -73,7 +73,7 @@ A Flask-based web application for generating, managing, and verifying digital ev
 ### Installation
 
 ```bash
-git clone <repository-url>
+git clone (https://github.com/VarunSinha123/holievent.git)
 cd event-pass-system
 pip install -r requirements.txt
 ```
